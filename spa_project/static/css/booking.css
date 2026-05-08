@@ -1,0 +1,361 @@
+/* ═══════════════════════════════════════════════════════════
+   LUXURY SPA BOOKING PAGE
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────
+   PAGE HEADER
+   ───────────────────────────────────────────────────────── */
+.page-header {
+  margin-bottom: 2.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAYOUT
+   ───────────────────────────────────────────────────────── */
+.booking-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3.5rem;
+}
+
+.booking-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CARDS
+   ───────────────────────────────────────────────────────── */
+.bk-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.bk-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ─────────────────────────────────────────────────────────
+   SIDEBAR & MAIN COLUMNS
+   ───────────────────────────────────────────────────────── */
+.customer-sidebar {
+  position: sticky;
+  top: 2rem;
+}
+
+.booking-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION TITLES
+   ───────────────────────────────────────────────────────── */
+.bk-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 2px solid var(--gold-light);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bk-section-title i {
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   FORM FIELDS
+   ───────────────────────────────────────────────────────── */
+.bk-field {
+  margin-bottom: 1.25rem;
+}
+
+.bk-field:last-child {
+  margin-bottom: 0;
+}
+
+.bk-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bk-label .req {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   INPUTS & CONTROLS
+   ───────────────────────────────────────────────────────── */
+.bk-input,
+.bk-select,
+.bk-textarea {
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.bk-input:focus,
+.bk-select:focus,
+.bk-textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-muted);
+}
+
+.bk-input::placeholder,
+.bk-textarea::placeholder {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.bk-input[type="date"],
+.bk-input[type="time"] {
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+}
+
+.bk-textarea {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.bk-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   ERROR MESSAGES
+   ───────────────────────────────────────────────────────── */
+.bk-error {
+  color: var(--danger);
+  font-size: 0.75rem;
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.bk-error::before {
+  content: "⚠";
+}
+
+/* ─────────────────────────────────────────────────────────
+   SERVICE INFO BOX
+   ───────────────────────────────────────────────────────── */
+.service-info-box {
+  background: linear-gradient(135deg, var(--gold-muted) 0%, rgba(249, 250, 251, 0.5) 100%);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--r-md);
+  padding: 1.1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.service-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+}
+
+.service-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.service-info-item i {
+  color: var(--gold);
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.service-info-item .value {
+  font-weight: 700;
+  color: var(--gold-hover);
+  font-size: 1.05rem;
+  margin-left: auto;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BOOKING SUMMARY
+   ───────────────────────────────────────────────────────── */
+.booking-summary {
+  background: linear-gradient(135deg, rgba(201, 169, 110, 0.05) 0%, rgba(249, 248, 245, 0.9) 100%);
+  border: 1.5px solid var(--gold-border);
+  border-radius: var(--r-lg);
+  padding: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.booking-summary .bk-section-title {
+  border-bottom-color: var(--gold);
+  margin-bottom: 1rem;
+  padding-bottom: 0.7rem;
+  font-size: 0.72rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summary-row .s-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.summary-row .s-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--gold-light);
+  font-size: 1rem;
+}
+
+.summary-row.total .s-label {
+  color: var(--text-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.summary-row.total .s-value {
+  color: var(--gold-hover);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SUBMIT BUTTON
+   ───────────────────────────────────────────────────────── */
+.btn-book {
+  width: 100%;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-pill);
+  padding: 1rem 2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(201, 169, 110, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: var(--font-ui);
+}
+
+.btn-book:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(201, 169, 110, 0.38);
+  background: linear-gradient(135deg, var(--gold-hover) 0%, var(--gold) 100%);
+  color: #fff;
+}
+
+.btn-book:active {
+  transform: translateY(0);
+}
+
+.btn-book i {
+  font-size: 1.1rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   ALERT BOX
+   ───────────────────────────────────────────────────────── */
+.alert-danger-ana {
+  background: var(--danger-light);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--r-md);
+  padding: 1rem 1.25rem;
+  color: var(--danger-text);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 991px) {
+  .booking-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .customer-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-wrap {
+    padding: 0 1rem 2.5rem;
+  }
+
+  .bk-card {
+    padding: 1.4rem;
+  }
+
+  .btn-book {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}

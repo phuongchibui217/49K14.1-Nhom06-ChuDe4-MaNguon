@@ -1,0 +1,63 @@
+{% load static %}
+{% now "YmdHis" as chat_widget_version %}
+
+<link rel="stylesheet" href="{% static 'css/chat-widget.css' %}?v={{ chat_widget_version }}">
+
+<div class="chat-widget-container" id="chatWidgetContainer">
+    <div class="chat-box">
+        <div class="chat-header">
+            <div class="chat-header-title">
+                <i class="fas fa-spa"></i>
+                <div>
+                    <h6>Spa ANA</h6>
+                    <p id="chatStatusLabel">Tư vấn trực tuyến</p>
+                </div>
+            </div>
+
+            <button class="chat-close-btn" type="button" onclick="toggleChat()" aria-label="Đóng chat">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="chat-warning-note d-none" id="chatGuestWarning">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Lịch sử chat sẽ không được lưu khi bạn rời khỏi website.</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty-state" id="chatEmptyState">
+                <i class="fas fa-comments"></i>
+                <p>Nhắn tin để bắt đầu cuộc trò chuyện với Spa ANA.</p>
+            </div>
+        </div>
+
+        <div class="chat-error-message d-none" id="chatErrorMessage">
+            Không thể gửi tin nhắn. Vui lòng thử lại sau
+        </div>
+
+        <form class="chat-footer" id="chatForm">
+            <div class="chat-input-container">
+                <textarea
+                    class="chat-input"
+                    id="chatInput"
+                    rows="1"
+                    placeholder="Nhập nội dung tin nhắn..."
+                ></textarea>
+                <button class="chat-send-btn" id="chatSendBtn" type="submit" disabled aria-label="Gửi tin nhắn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+window.chatWidgetConfig = {
+    isAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+    socketPath: "/ws/chat/customer/",
+    guestWarningMessage: "Lịch sử chat sẽ không được lưu khi bạn rời khỏi website.",
+    sendErrorMessage: "Không thể gửi tin nhắn. Vui lòng thử lại sau",
+    connectionErrorMessage: "Không thể kết nối chat. Vui lòng thử lại."
+};
+</script>
+<script src="{% static 'js/chat-widget.js' %}?v={{ chat_widget_version }}"></script>

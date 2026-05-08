@@ -1,0 +1,349 @@
+{# ────────────────────────────────────────────────────────────── #}
+{# SERVICE LIST PAGE - Trang danh sách dịch vụ                     #}
+{# Hiển thị tất cả dịch vụ với filter theo danh mục               #}
+{# ────────────────────────────────────────────────────────────── #}
+
+{% extends 'spa/base.html' %}
+{% load spa_filters %}
+
+{% block title %}Dịch vụ — Spa ANA{% endblock %}
+
+{# ────────────────────────────────────────────────────────────── #}
+{# STYLES - Styling cho page                                       #}
+{# ────────────────────────────────────────────────────────────── #}
+{% block extra_css %}
+<style>
+/* ───────────────────────────────────────────────────────────────────
+   STYLING CHO SERVICE LIST PAGE
+   ─────────────────────────────────────────────────────────────────── */
+
+/* ───────────────────────────────────────────────────────────────────
+   HERO SECTION - Banner chính
+   ─────────────────────────────────────────────────────────────────── */
+/* Page header — luxury dark overlay */
+.sl-hero {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+  margin-top: 0;
+}
+.sl-hero__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.sl-hero__overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(28,25,23,.45), rgba(28,25,23,.68));
+}
+.sl-hero__content {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; color: #fff;
+  padding: 0 1rem;
+}
+.sl-hero__eyebrow {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold-light); margin-bottom: .75rem;
+}
+.sl-hero__title {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 300; letter-spacing: .04em;
+  margin: 0 0 .6rem;
+}
+.sl-hero__sub {
+  font-size: .95rem; font-weight: 300;
+  color: rgba(255,255,255,.75); margin: 0;
+  letter-spacing: .04em;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   FILTER BAR - Sticky navigation lọc category
+   ─────────────────────────────────────────────────────────────────── */
+/* Filter bar */
+.sl-filter {
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border);
+  padding: 1.1rem 0;
+  position: sticky; top: 68px; z-index: 100;
+}
+.sl-filter__inner {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; gap: .5rem;
+}
+.sl-filter-btn {
+  display: inline-flex; align-items: center;
+  padding: .45rem 1.1rem;
+  border-radius: var(--r-pill);
+  font-size: .8rem; font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--ease);
+  white-space: nowrap;
+}
+.sl-filter-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.sl-filter-btn.is-active {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #fff;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   GRID SECTION - Responsive grid layout
+   ─────────────────────────────────────────────────────────────────── */
+/* Grid */
+.sl-section { padding: 3.5rem 0 5rem; background: var(--bg-page); }
+
+/* ───────────────────────────────────────────────────────────────────
+   SERVICE CARD - Card component cho mỗi dịch vụ
+   ─────────────────────────────────────────────────────────────────── */
+/* Service card — luxury minimal */
+.sl-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  height: 100%;
+  transition: box-shadow .22s, transform .22s, border-color .22s;
+}
+.sl-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(28,25,23,.1);
+  border-color: var(--gold-border);
+}
+
+/* Image */
+.sl-card__img-wrap {
+  position: relative;
+  height: 210px; overflow: hidden;
+}
+.sl-card__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .5s ease;
+  display: block;
+}
+.sl-card:hover .sl-card__img { transform: scale(1.06); }
+
+.sl-card__cat {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(28,25,23,.62);
+  backdrop-filter: blur(6px);
+  color: var(--gold-light);
+  font-size: .65rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: .3rem .75rem;
+  border-radius: var(--r-pill);
+}
+.sl-card__duration {
+  position: absolute; bottom: 12px; right: 12px;
+  background: rgba(28,25,23,.55);
+  backdrop-filter: blur(6px);
+  color: rgba(255,255,255,.9);
+  font-size: .72rem; font-weight: 600;
+  padding: .25rem .65rem;
+  border-radius: var(--r-pill);
+}
+
+/* Body */
+.sl-card__body {
+  padding: 1.25rem 1.35rem 1.4rem;
+  display: flex; flex-direction: column; flex: 1;
+}
+.sl-card__name {
+  font-size: 1rem; font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 .5rem;
+  line-height: 1.35;
+}
+.sl-card__desc {
+  font-size: .83rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 1rem;
+}
+.sl-card__meta {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-bottom: .875rem;
+  display: flex; align-items: center; gap: .35rem;
+}
+.sl-card__meta i { color: var(--gold); }
+
+.sl-card__footer {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding-top: .875rem;
+  border-top: 1px solid var(--bg-subtle);
+  margin-top: auto;
+}
+.sl-card__price {
+  font-size: .97rem; font-weight: 700;
+  color: var(--gold);
+  line-height: 1.2;
+}
+.sl-card__price-label {
+  font-size: .68rem; font-weight: 400;
+  color: var(--text-muted);
+  display: block; margin-bottom: 1px;
+}
+.sl-card__cta {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: .45rem 1rem;
+  border: 1.5px solid var(--text-primary);
+  border-radius: var(--r-sm);
+  font-size: .78rem; font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: var(--ease);
+  white-space: nowrap;
+}
+.sl-card__cta:hover {
+  background: var(--text-primary);
+  color: #fff;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   EMPTY STATE - Khi không có dữ liệu hoặc lỗi
+   ─────────────────────────────────────────────────────────────────── */
+/* Empty */
+.sl-empty {
+  text-align: center; padding: 5rem 2rem;
+  color: var(--text-muted);
+}
+.sl-empty i { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+</style>
+{% endblock %}
+
+{# ────────────────────────────────────────────────────────────── #}
+{# CONTENT - Main content area                                     #}
+{# ────────────────────────────────────────────────────────────── #}
+{% block content %}
+
+{# ────────────────────────────────────────────────────────────── #}
+{# HERO SECTION - Banner chính với title và subtitle              #}
+{# ────────────────────────────────────────────────────────────── #}
+<div class="sl-hero">
+  <img class="sl-hero__img"
+       src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1920"
+       alt="Dịch vụ Spa ANA">
+  <div class="sl-hero__overlay"></div>
+  <div class="sl-hero__content">
+    <span class="sl-hero__eyebrow">Spa ANA</span>
+    <h1 class="sl-hero__title">Dịch Vụ Của Chúng Tôi</h1>
+    <p class="sl-hero__sub">Khám phá các liệu trình thư giãn và chăm sóc sắc đẹp cao cấp</p>
+  </div>
+</div>
+
+{# ────────────────────────────────────────────────────────────── #}
+{# FILTER BAR - Navigation lọc dịch vụ theo danh mục              #}
+{# ────────────────────────────────────────────────────────────── #}
+<div class="sl-filter">
+  <div class="container">
+    <div class="sl-filter__inner">
+      <button class="sl-filter-btn is-active" onclick="filterServices('all', this)">Tất cả</button>
+      {% for cat in categories %}
+      <button class="sl-filter-btn" onclick="filterServices('{{ cat.code }}', this)">{{ cat.name }}</button>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# ────────────────────────────────────────────────────────────── #}
+{# SERVICES GRID - Danh sách dịch vụ (responsive grid)             #}
+{# ────────────────────────────────────────────────────────────── #}
+<section class="sl-section">
+  <div class="container">
+    {# ── ERROR STATE: Database error ── #}
+    {% if load_error %}
+    <div class="col-12 sl-empty">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>Không thể tải danh sách dịch vụ, vui lòng thử lại.</p>
+    </div>
+
+    {# ── NORMAL STATE: Grid với 3 layouts (mobile/tablet/desktop) ── #}
+    {% else %}
+    <div class="row g-4" id="servicesGrid">
+      {# Loop qua services và render card #}
+      {% for service in services %}
+      {# Mobile: 1 col, Tablet: 2 col, Desktop: 3 col #}
+      <div class="col-sm-6 col-lg-4 service-item" data-category="{{ service.category.code }}">
+        {% include 'spa/includes/_service_card.html' with service=service %}
+      </div>
+
+      {# ── EMPTY STATE: Không có dịch vụ nào ── #}
+      {% empty %}
+      <div class="col-12 sl-empty">
+        <i class="fas fa-spa"></i>
+        <p>Hiện chưa có dịch vụ nào.</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+
+{# ────────────────────────────────────────────────────────────── #}
+{# JAVASCRIPT - Client-side filter logic                           #}
+{# ────────────────────────────────────────────────────────────── #}
+{% block extra_js %}
+<script>
+/**
+ * Filter services theo category code (client-side, không reload page)
+ *
+ * @param {string} code - Mã category ('all' hoặc category code như 'MASSAGE', 'CS_DA')
+ * @param {HTMLElement} btn - Button được click (để set active state)
+ *
+ * Workflow:
+ * 1. Xóa active class khỏi tất cả filter buttons
+ * 2. Thêm active class vào button được click
+ * 3. Ẩn/hiện service cards dựa trên data-category attribute
+ */
+function filterServices(code, btn) {
+  // Bước 1: Xóa trạng thái active khỏi tất cả các nút lọc
+  document.querySelectorAll('.sl-filter-btn').forEach(b => b.classList.remove('is-active'));
+
+  // Bước 2: Đánh dấu nút vừa được click là active
+  btn.classList.add('is-active');
+
+  // Bước 3: Lọc danh sách dịch vụ
+  // - Nếu code = 'all': Hiện tất cả
+  // - Nếu code != 'all': Chỉ hiện services có data-category khớp với code
+
+  // Lấy tất cả các service cards
+  const serviceCards = document.querySelectorAll('.service-item');
+
+  // Duyệt từng card và quyết định hiển thị hay ẩn
+  serviceCards.forEach(function(card) {
+    const cardCategory = card.dataset.category;  // Lấy category code của card này
+
+    // Kiểm tra điều kiện hiển thị:
+    // 1. Đang chọn "Tất cả" (code === 'all') → HIỆN
+    // 2. Hoặc category của card khớp với code được chọn → HIỆN
+    // 3. Ngược lại → ẨN
+    if (code === 'all' || cardCategory === code) {
+      // Hiện card: xóa inline display để dùng CSS default (flex)
+      card.style.display = '';
+    } else {
+      // Ẩn card: set display = none
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+{% endblock %}

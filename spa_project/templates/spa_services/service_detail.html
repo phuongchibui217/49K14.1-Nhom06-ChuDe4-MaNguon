@@ -1,0 +1,1012 @@
+{% extends 'spa/base.html' %}
+{% load spa_filters %}
+
+{% block title %}{% if service %}{{ service.name }} — Spa ANA{% else %}Dịch vụ — Spa ANA{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* SERVICE DETAIL — LUXURY SPA REDESIGN */
+
+  /* Hero Split Layout */
+  .sd-hero {
+    background: var(--bg-white);
+    padding: 5rem 0 4rem;
+    margin-top: 0;
+  }
+
+  .sd-hero__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  @media (max-width: 991px) {
+    .sd-hero__grid {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+  }
+
+  .sd-hero__content {
+    padding-right: 2rem;
+  }
+
+  .sd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .sd-breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+
+  .sd-breadcrumb a:hover {
+    color: var(--gold);
+  }
+
+  .sd-breadcrumb i {
+    font-size: .65rem;
+  }
+
+  .sd-hero__cat {
+    display: inline-block;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .sd-hero__title {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 300;
+    letter-spacing: .01em;
+    line-height: 1.25;
+    color: #2b2b2b;
+    margin-bottom: 1.25rem;
+  }
+
+  .sd-hero__desc {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: #4a4a4a;
+    margin-bottom: 2rem;
+    max-width: 520px;
+  }
+
+  .sd-hero__actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .sd-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .85rem 2rem;
+    border-radius: var(--r-sm);
+    font-size: .875rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-decoration: none;
+    transition: all .2s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .sd-btn--primary {
+    background: var(--text-primary);
+    color: #fff;
+  }
+
+  .sd-btn--primary:hover {
+    background: #1a1a1a;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .sd-btn--outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .sd-btn--outline:hover {
+    border-color: var(--text-primary);
+    background: var(--bg-subtle);
+  }
+
+  .sd-hero__img-wrap {
+    position: relative;
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(28, 25, 23, .12);
+    aspect-ratio: 4/3;
+  }
+
+  .sd-hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  @media (max-width: 991px) {
+    .sd-hero__content {
+      padding-right: 0;
+    }
+
+    .sd-hero__img-wrap {
+      order: -1;
+    }
+  }
+
+  /* Main Body */
+  .sd-body {
+    background: var(--bg-page);
+    padding: 4rem 0 5rem;
+  }
+
+  .sd-body__grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 4rem;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .sd-body__grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+
+  /* Left Content Sections */
+  .sd-section {
+    margin-bottom: 3.5rem;
+  }
+
+  .sd-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .sd-section__eyebrow {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: .75rem;
+    display: block;
+  }
+
+  .sd-section__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    letter-spacing: -.01em;
+    margin-bottom: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .sd-section__text {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #333;
+  }
+
+  /* Description */
+  .sd-desc {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #333;
+  }
+
+  /* Benefits grid */
+  .sd-benefits {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  @media (max-width: 600px) {
+    .sd-benefits {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sd-benefits__item {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+  }
+
+  .sd-benefits__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gold-muted);
+    border: 1.5px solid var(--gold-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15rem;
+  }
+
+  .sd-benefits__icon i {
+    font-size: .85rem;
+    color: var(--gold);
+  }
+
+  .sd-benefits__text {
+    flex: 1;
+  }
+
+  .sd-benefits__text strong {
+    display: block;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin-bottom: .25rem;
+  }
+
+  .sd-benefits__text p {
+    font-size: .9rem;
+    line-height: 1.65;
+    color: #555;
+    margin: 0;
+  }
+
+  /* Process steps */
+  .sd-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  .sd-step {
+    display: flex;
+    gap: 1.25rem;
+    position: relative;
+  }
+
+  .sd-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 42px;
+    bottom: -1.75rem;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold-border), transparent);
+  }
+
+  .sd-step__num {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .sd-step__content {
+    flex: 1;
+    padding-top: .35rem;
+  }
+
+  .sd-step__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin-bottom: .4rem;
+  }
+
+  .sd-step__desc {
+    font-size: .925rem;
+    line-height: 1.7;
+    color: #555;
+    margin: 0;
+  }
+
+  /* Suitable for - check list */
+  .sd-suitable {
+    display: grid;
+    gap: .75rem;
+  }
+
+  .sd-suitable__item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .975rem;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  .sd-suitable__item i {
+    color: var(--gold);
+    font-size: .85rem;
+    flex-shrink: 0;
+  }
+
+  /* Notes box */
+  .sd-notes {
+    background: #fef9f0;
+    border-left: 3px solid var(--gold);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    padding: 1.5rem 1.75rem;
+  }
+
+  .sd-notes__title {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin-bottom: .75rem;
+  }
+
+  .sd-notes__title i {
+    color: var(--gold);
+    font-size: .9rem;
+  }
+
+  .sd-notes__text {
+    font-size: .925rem;
+    line-height: 1.75;
+    color: #5a4a2a;
+    margin: 0;
+  }
+
+  /* Right Booking Card */
+  .sd-card {
+    position: sticky;
+    top: 100px;
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(28, 25, 23, .08);
+  }
+
+  .sd-card__header {
+    margin-bottom: 1.75rem;
+  }
+
+  .sd-card__eyebrow {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: .5rem;
+  }
+
+  .sd-card__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin: 0;
+  }
+
+  /* Variant options */
+  .sd-variants {
+    display: grid;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .sd-variant {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--bg-white);
+  }
+
+  .sd-variant:hover {
+    border-color: var(--gold-border);
+    background: var(--bg-subtle);
+  }
+
+  .sd-variant.is-selected {
+    border-color: var(--gold);
+    background: #fefbf7;
+    box-shadow: 0 2px 8px rgba(200, 169, 126, .15);
+  }
+
+  .sd-variant__radio {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gold);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sd-variant__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sd-variant__name {
+    font-size: .925rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin-bottom: .2rem;
+    line-height: 1.3;
+  }
+
+  .sd-variant__duration {
+    font-size: .8rem;
+    color: #666;
+  }
+
+  .sd-variant__price {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .sd-variant__badge {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: var(--gold);
+    color: #fff;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+  }
+
+  /* Card note */
+  .sd-card__note {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    padding: .75rem 1rem;
+    background: var(--bg-subtle);
+    border-radius: var(--r-sm);
+  }
+
+  .sd-card__note i {
+    color: var(--gold);
+    font-size: .75rem;
+  }
+
+  /* Book button */
+  .sd-card__btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: var(--text-primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-md);
+    font-size: .9rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .sd-card__btn:hover:not(:disabled) {
+    background: #1a1a1a;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+  }
+
+  .sd-card__btn:disabled {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .sd-card__hint {
+    font-size: .75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: .75rem;
+    line-height: 1.5;
+  }
+
+  /* Card footer */
+  .sd-card__footer {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .sd-card__contact {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    font-size: .825rem;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .sd-card__contact i {
+    color: var(--gold);
+    font-size: .85rem;
+  }
+
+  .sd-card__contact strong {
+    color: #2b2b2b;
+    font-weight: 600;
+  }
+
+  /* Related Services */
+  .sd-related {
+    background: var(--bg-white);
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .sd-related__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .sd-related__header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .sd-related__eyebrow {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: .75rem;
+  }
+
+  .sd-related__title {
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: #2b2b2b;
+    letter-spacing: .01em;
+    margin: 0;
+  }
+
+  .sd-related__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 767px) {
+    .sd-hero {
+      padding: 3rem 0 2.5rem;
+    }
+
+    .sd-body {
+      padding: 3rem 0 4rem;
+    }
+
+    .sd-card {
+      position: static;
+    }
+
+    .sd-related {
+      padding: 4rem 0;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── ERROR STATES ── #}
+{% if not_found %}
+<div class="container" style="padding: 5rem 1rem; text-align: center;">
+  <i class="fas fa-exclamation-circle" style="font-size:2.5rem; color:#c8a97e; margin-bottom:1rem; display:block;"></i>
+  <p style="font-size:1.05rem; color:#555;">Dịch vụ không tồn tại hoặc đã bị xóa.</p>
+  <a href="{% url 'spa_services:service_list' %}" class="sd-btn sd-btn--outline"
+    style="display:inline-flex; margin-top:1rem;">
+    <i class="fas fa-arrow-left"></i>&nbsp; Quay lại danh sách dịch vụ
+  </a>
+</div>
+{% elif load_error %}
+<div class="container" style="padding: 5rem 1rem; text-align: center;">
+  <i class="fas fa-triangle-exclamation"
+    style="font-size:2.5rem; color:#c8a97e; margin-bottom:1rem; display:block;"></i>
+  <p style="font-size:1.05rem; color:#555;">Không thể tải thông tin dịch vụ, vui lòng thử lại.</p>
+  <a href="{% url 'spa_services:service_list' %}" class="sd-btn sd-btn--outline"
+    style="display:inline-flex; margin-top:1rem;">
+    <i class="fas fa-arrow-left"></i>&nbsp; Quay lại danh sách dịch vụ
+  </a>
+</div>
+{% else %}
+
+{# Hero Split Layout #}
+<section class="sd-hero">
+  <div class="sd-hero__grid">
+
+    {# Left: Content #}
+    <div class="sd-hero__content">
+      <nav class="sd-breadcrumb">
+        <a href="{% url 'pages:home' %}">Trang chủ</a>
+        <i class="fas fa-chevron-right"></i>
+        <a href="{% url 'spa_services:service_list' %}">Dịch vụ</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>{{ service.name }}</span>
+      </nav>
+
+      <span class="sd-hero__cat">{{ service.category.name|default:"Dịch vụ spa" }}</span>
+      <h1 class="sd-hero__title">{{ service.name }}</h1>
+
+      {% if service.short_description %}
+      <p class="sd-hero__desc">{{ service.short_description }}</p>
+      {% else %}
+      <p class="sd-hero__desc">Trải nghiệm thư giãn toàn diện, được thiết kế riêng cho bạn</p>
+      {% endif %}
+
+      <div class="sd-hero__actions">
+        <a href="#booking-card" class="sd-btn sd-btn--primary">
+          <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+        </a>
+        <button onclick="document.querySelector('.sd-body').scrollIntoView({behavior:'smooth'})"
+          class="sd-btn sd-btn--outline">
+          <i class="fas fa-info-circle"></i> Xem liệu trình
+        </button>
+      </div>
+    </div>
+
+    {# Right: Image #}
+    <div class="sd-hero__img-wrap">
+      <img class="sd-hero__img" src="{{ service.get_image_url }}" alt="{{ service.name }}">
+    </div>
+
+  </div>
+</section>
+
+{# Main Body #}
+<div class="sd-body">
+  <div class="sd-body__grid">
+
+    {# Left: Info Sections #}
+    <div class="sd-left">
+
+      {# Description #}
+      {% if service.description %}
+      <div class="sd-section">
+        <span class="sd-section__eyebrow">Giới thiệu</span>
+        <h2 class="sd-section__title">Về liệu trình này</h2>
+        <div class="sd-desc">
+          {{ service.description|linebreaks }}
+        </div>
+      </div>
+      {% endif %}
+
+      {# Benefits #}
+      <div class="sd-section">
+        <span class="sd-section__eyebrow">Lợi ích</span>
+        <h2 class="sd-section__title">Điều dịch vụ này mang lại</h2>
+        <ul class="sd-benefits">
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-spa"></i></div>
+            <div class="sd-benefits__text">
+              <strong>Thư giãn sâu</strong>
+              <p>Giảm căng thẳng, mệt mỏi tích tụ trong cơ thể</p>
+            </div>
+          </li>
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="sd-benefits__text">
+              <strong>Cải thiện tuần hoàn</strong>
+              <p>Tăng cường lưu thông máu và bạch huyết</p>
+            </div>
+          </li>
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-bolt"></i></div>
+            <div class="sd-benefits__text">
+              <strong>Tái tạo năng lượng</strong>
+              <p>Phục hồi tinh thần, cân bằng cảm xúc</p>
+            </div>
+          </li>
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-star"></i></div>
+            <div class="sd-benefits__text">
+              <strong>Làn da khỏe đẹp</strong>
+              <p>Da mềm mịn, sáng khỏe tự nhiên</p>
+            </div>
+          </li>
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-moon"></i></div>
+            <div class="sd-benefits__text">
+              <strong>Giấc ngủ ngon</strong>
+              <p>Giảm đau nhức, cải thiện chất lượng giấc ngủ</p>
+            </div>
+          </li>
+          <li class="sd-benefits__item">
+            <div class="sd-benefits__icon"><i class="fas fa-leaf"></i></div>
+            <div class="sd-benefits__text">
+              <strong>An toàn tự nhiên</strong>
+              <p>Sản phẩm thiên nhiên, không gây kích ứng</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      {# Process #}
+      <div class="sd-section">
+        <span class="sd-section__eyebrow">Quy trình</span>
+        <h2 class="sd-section__title">Trải nghiệm từng bước</h2>
+        <ul class="sd-steps">
+          <li class="sd-step">
+            <span class="sd-step__num">01</span>
+            <div class="sd-step__content">
+              <div class="sd-step__title">Tư vấn & chuẩn bị</div>
+              <p class="sd-step__desc">Chuyên viên trao đổi về tình trạng sức khỏe và mong muốn của bạn, lựa chọn liệu
+                trình phù hợp nhất.</p>
+            </div>
+          </li>
+          <li class="sd-step">
+            <span class="sd-step__num">02</span>
+            <div class="sd-step__content">
+              <div class="sd-step__title">Làm sạch & khởi động</div>
+              <p class="sd-step__desc">Cơ thể được làm sạch nhẹ nhàng, chuẩn bị cho liệu trình chính với các sản phẩm
+                thiên nhiên.</p>
+            </div>
+          </li>
+          <li class="sd-step">
+            <span class="sd-step__num">03</span>
+            <div class="sd-step__content">
+              <div class="sd-step__title">Liệu trình chính</div>
+              <p class="sd-step__desc">Kỹ thuật viên thực hiện liệu trình với kỹ thuật chuyên sâu, điều chỉnh áp lực
+                theo nhu cầu của bạn.</p>
+            </div>
+          </li>
+          <li class="sd-step">
+            <span class="sd-step__num">04</span>
+            <div class="sd-step__content">
+              <div class="sd-step__title">Hoàn thiện & nghỉ ngơi</div>
+              <p class="sd-step__desc">Kết thúc bằng liệu pháp thư giãn, bạn có thời gian nghỉ ngơi và thưởng thức trà
+                thảo mộc.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      {# Suitable for #}
+      <div class="sd-section">
+        <span class="sd-section__eyebrow">Phù hợp với</span>
+        <h2 class="sd-section__title">Dịch vụ này dành cho bạn nếu</h2>
+        <div class="sd-suitable">
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Bạn đang căng thẳng, mệt mỏi do công việc</span>
+          </div>
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Cảm thấy đau nhức cơ bắp, vai gáy</span>
+          </div>
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Muốn thư giãn sâu và phục hồi năng lượng</span>
+          </div>
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Cần chăm sóc sức khỏe định kỳ</span>
+          </div>
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Phục hồi sau vận động, tập luyện</span>
+          </div>
+          <div class="sd-suitable__item">
+            <i class="fas fa-circle-check"></i>
+            <span>Tặng quà cho người thân yêu</span>
+          </div>
+        </div>
+      </div>
+
+      {# Notes #}
+      <div class="sd-section">
+        <span class="sd-section__eyebrow">Lưu ý</span>
+        <h2 class="sd-section__title">Trước & sau liệu trình</h2>
+        <div class="sd-notes">
+          <div class="sd-notes__title">
+            <i class="fas fa-circle-info"></i>
+            <span>Điều cần biết</span>
+          </div>
+          <p class="sd-notes__text">
+            Vui lòng uống đủ nước trước khi đến. Tránh ăn no trong vòng 1 giờ trước liệu trình.
+            Thông báo cho chuyên viên nếu bạn đang mang thai, có vấn đề về tim mạch hoặc da liễu.
+            Sau liệu trình, hãy nghỉ ngơi nhẹ nhàng và tiếp tục bổ sung nước để tối ưu hiệu quả.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    {# Right: Booking Card #}
+    <div class="sd-right">
+      <div class="sd-card" id="booking-card">
+        <div class="sd-card__header">
+          <div class="sd-card__eyebrow">Đặt lịch</div>
+          <h3 class="sd-card__title">Chọn gói phù hợp</h3>
+        </div>
+
+        {% with variants=service.variants.all %}
+        {% if variants %}
+        <div class="sd-variants">
+          {% for v in variants %}
+          <label class="sd-variant">
+            {% if forloop.counter == 2 and variants|length >= 3 %}
+            <span class="sd-variant__badge">Phổ biến</span>
+            {% endif %}
+            <input type="radio" class="sd-variant__radio" name="selected_variant" value="{{ v.id }}"
+              data-duration="{{ v.duration_minutes }}" data-price="{{ v.price }}" onchange="onVariantChange(this)">
+            <div class="sd-variant__info">
+              <div class="sd-variant__name">{{ v.label }}</div>
+              <div class="sd-variant__duration">{{ v.duration_minutes }} phút</div>
+            </div>
+            <div class="sd-variant__price">{{ v.price|vnd }}</div>
+          </label>
+          {% endfor %}
+        </div>
+        <button class="sd-card__btn" id="btnBook" disabled onclick="goToBooking({{ service.id }})">
+          Đặt lịch ngay
+        </button>
+        <p class="sd-card__hint" id="bookingNote">Vui lòng chọn gói để tiếp tục</p>
+
+        {% else %}
+        <p style="font-size:.9rem;color:#666;margin-bottom:1.5rem;line-height:1.7;">
+          Hiện dịch vụ chưa có gói khả dụng.
+        </p>
+        <a href="{% url 'appointments:booking' %}?service={{ service.id }}" class="sd-card__btn">
+          Liên hệ đặt lịch
+        </a>
+        {% endif %}
+        {% endwith %}
+
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+{# Related Services #}
+{% if related_services %}
+<section class="sd-related">
+  <div class="sd-related__container">
+    <div class="sd-related__header">
+      <div class="sd-related__eyebrow">Khám phá thêm</div>
+      <h2 class="sd-related__title">Dịch vụ liên quan</h2>
+    </div>
+    <div class="sd-related__grid">
+      {% for rel in related_services %}
+      {% include 'spa/includes/_service_card.html' with service=rel %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endif %}{# end not_found / load_error / else #}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /**
+   * Flow:
+   * 1. Xóa highlight 'is-selected' khỏi tất cả variants
+   * 2. Thêm highlight vào variant được chọn
+   * 3. Enable nút "Đặt lịch ngay"
+   * 4. Ẩn dòng hint "Vui lòng chọn gói"
+   */
+  function onVariantChange(radio) {
+    // Bước 1: Xóa highlight khỏi tất cả variants (clean state)
+    document.querySelectorAll('.sd-variant').forEach(el =>
+      el.classList.remove('is-selected')
+    );
+    // Kết quả: Tất cả .sd-variant mất class 'is-selected'
+
+    // Bước 2: Thêm highlight vào variant được chọn
+    radio.closest('.sd-variant').classList.add('is-selected');
+    // Giải thích:
+    //   radio           = <input> element được click
+    //   .closest()      = Tìm parent <label> gần nhất
+    //   .classList.add() = Thêm CSS class để highlight
+
+    // Bước 3: Enable nút "Đặt lịch ngay" & Ẩn hint text
+    const btn = document.getElementById('btnBook');      // Lấy nút button
+    const note = document.getElementById('bookingNote'); // Lấy hint text
+
+    if (btn) btn.disabled = false;   // Enable button (nếu tồn tại)
+    if (note) note.textContent = ''; // Xóa text (ẩn hint)
+  }
+
+  /**
+   * Flow:
+   * 1. Tìm radio button được selected
+   * 2. Redirect đến /booking/ với service & variant IDs
+   */
+  function goToBooking(serviceId) {
+    // Lấy variant được selected (radio button có attribute checked)
+    const selected = document.querySelector('input[name="selected_variant"]:checked');
+
+    // Guard clause: Nếu không có variant nào selected, dừng lại
+    if (!selected) return;
+
+    // Redirect đến trang booking với query parameters
+    window.location.href = `/booking/?service=${serviceId}&variant=${selected.value}`;
+    //  /booking/?service=12&variant=46
+  }
+
+  /**
+   * SMOOTH SCROLL TO BOOKING CARD
+   * Tự động scroll mượt đến booking card khi user click links
+   * Được chạy khi DOM loaded xong
+   */
+  document.addEventListener('DOMContentLoaded', function () {
+    // Tìm tất cả links dẫn đến #booking-card
+    const bookingLinks = document.querySelectorAll('a[href="#booking-card"]');
+
+    // Thêm event listener cho từng link
+    bookingLinks.forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.getElementById('booking-card').scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

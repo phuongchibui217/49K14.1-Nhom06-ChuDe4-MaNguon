@@ -1,0 +1,27 @@
+ID: 11, Name: Massage toàn thân kiểu Thái
+   image field: media/services/massage-body-toan-than-2_ydtydg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/massage-body-toan-than-2_ydtydg
+ID: 9, Name: Tẩy tế bào chết toàn thân
+   image field: services/tái-tạo-da-toàn-thân-1.webp
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/t%C3%A1i-t%E1%BA%A1o-da-to%C3%A0n-th%C3%A2n-1.webp
+ID: 8, Name: Gội đầu thảo mộc
+   image field: services/goi-dau-thao-duoc---say-tao-kieu-uon-duoi--bam-toc-1665474793-6aef57.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/goi-dau-thao-duoc---say-tao-kieu-uon-duoi--bam-toc-1665474793-6aef57.jpg
+ID: 2, Name: Chăm sóc da cơ bản
+   image field: services/cham-soc-da-co-ban-1.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/cham-soc-da-co-ban-1.jpg
+ID: 3, Name: Chăm sóc da chuyên sâu
+   image field: services/cham-soc-da-chuyen-sau-tai-ladys-house.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/cham-soc-da-chuyen-sau-tai-ladys-house.jpg
+ID: 4, Name: Massage body
+   image field: services/massage-body-kieu-herbal-1.webp
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/massage-body-kieu-herbal-1.webp
+ID: 6, Name: Massage vai gáy
+   image field: services/vg.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/vg.jpg
+ID: 7, Name: Gội đầu dưỡng sinh
+   image field: services/rabb1197_bec3c8acee4e4670b810a5854342d409_grande.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/rabb1197_bec3c8acee4e4670b810a5854342d409_grande.jpg
+ID: 1, Name: Dưỡng trắng da mặt
+   image field: services/duong-trang-face-2.jpg
+   image.url: https://res.cloudinary.com/dkfjv527t/image/upload/v1/media/services/duong-trang-face-2.jpg

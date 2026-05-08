@@ -1,0 +1,331 @@
+/**
+ * MY APPOINTMENTS PAGE - LỊCH HẸN CỦA TÔI
+ *
+ * Trang hiển thị danh sách lịch hẹn của khách hàng
+ * Với filter tabs, appointment cards, empty state
+ *
+ * Author: Spa ANA Team
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   1. PAGE HEADER - Tiêu đề trang
+   ═══════════════════════════════════════════════════════════ */
+
+.my-appointments-page .page-header {
+  margin-bottom: 2rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. FILTER TABS - Thanh lọc theo trạng thái
+   ═══════════════════════════════════════════════════════════ */
+
+.my-appointments-page .filter-bar {
+  background: #f1f5f9;
+  border-radius: 14px;
+  padding: 6px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2rem;
+}
+
+.my-appointments-page .filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.45rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  background: transparent;
+  border: 1.5px solid transparent;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.my-appointments-page .filter-pill:hover {
+  background: white;
+  color: #1e3a5f;
+  border-color: #cbd5e1;
+  text-decoration: none;
+}
+
+.my-appointments-page .filter-pill.active {
+  background: #1e3a5f;
+  color: white;
+  border-color: #1e3a5f;
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+}
+
+.my-appointments-page .filter-pill .pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+}
+
+.my-appointments-page .filter-pill:not(.active) .pill-count {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. APPOINTMENT CARD - Card hiển thị lịch hẹn
+   ═══════════════════════════════════════════════════════════ */
+
+.my-appointments-page .appointment-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  padding: 18px 20px;
+  margin-bottom: 1rem;
+  border: 1px solid #f1f5f9;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.my-appointments-page .appointment-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Card Header - Tên dịch vụ + Mã + Trạng thái */
+.my-appointments-page .card-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.my-appointments-page .service-info h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.my-appointments-page .service-info .code {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Status Badge - Trạng thái lịch hẹn */
+.my-appointments-page .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.my-appointments-page .status-pending {
+  background: #fef9ec;
+  color: #b45309;
+}
+
+.my-appointments-page .status-not_arrived {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.my-appointments-page .status-arrived {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.my-appointments-page .status-confirmed {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.my-appointments-page .status-completed {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.my-appointments-page .status-cancelled {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.my-appointments-page .status-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Card Body - Chi tiết lịch hẹn */
+.my-appointments-page .card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 12px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.my-appointments-page .detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.my-appointments-page .detail-item i {
+  color: #d4a835;
+  font-size: 13px;
+  width: 14px;
+  text-align: center;
+}
+
+.my-appointments-page .detail-item .value {
+  color: #1e3a5f;
+  font-weight: 500;
+}
+
+/* Card Notes - Ghi chú */
+.my-appointments-page .card-notes {
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-top: 10px;
+}
+
+/* Card Footer - Nút hủy */
+.my-appointments-page .card-action-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.my-appointments-page .btn-cancel-appt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.my-appointments-page .btn-cancel-appt:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  color: #9f1239;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. EMPTY STATE - Trạng thái rỗng
+   ═══════════════════════════════════════════════════════════ */
+
+.my-appointments-page .empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border: 1px solid #f1f5f9;
+}
+
+.my-appointments-page .empty-state i {
+  color: #cbd5e1;
+}
+
+.my-appointments-page .empty-state h3 {
+  color: #1e3a5f;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* CTA Button - Nút kêu gọi hành động */
+.my-appointments-page .btn-appt-cta {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 16px 40px;
+  background: rgba(218, 185, 135, 0.9);
+  color: #fff !important;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  border: 1.5px solid rgba(201, 169, 110, 0.3);
+  box-shadow: 0 6px 20px rgba(201, 169, 110, 0.25);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.my-appointments-page .btn-appt-cta i {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 14px !important;
+  color: #fff !important;
+  margin: 0 !important;
+  width: auto !important;
+  transform: none !important;
+}
+
+.my-appointments-page .btn-appt-cta:hover {
+  background: rgba(218, 185, 135, 1);
+  color: #fff !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(218, 185, 135, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   5. RESPONSIVE - Mobile, Tablet
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .my-appointments-page .page-header {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .my-appointments-page .card-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .my-appointments-page .filter-bar {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .my-appointments-page .filter-bar {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .my-appointments-page .filter-pill {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+  }
+}

@@ -1,0 +1,573 @@
+"""
+API Endpoints — Lịch hẹn (Organized by Tabs)
+
+Cấu trúc mới: Booking + Appointment
+- Booking = 1 lần đặt lịch (1 người đặt, nhiều khách)
+- Appointment = từng khách / dịch vụ / phòng / khung giờ
+
+TAB 1: Lịch theo phòng (Room Calendar)
+TAB 2: Yêu cầu đặt lịch (Booking Requests)
+SHARED: Endpoints dùng chung
+
+Author: Spa ANA Team
+"""
+
+import json
+from datetime import datetime
+from decimal import Decimal
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db.models import Q
+from django.db import transaction
+
+from .models import Appointment, Booking, Room, Invoice, InvoiceItem, InvoicePayment
+from customers.models import CustomerProfile
+from spa_services.models import ServiceVariant
+
+from .serializers import serialize_appointment, serialize_booking
+from .services import validate_appointment_create, _get_appt_duration
+from core.api_response import staff_api, get_or_404
+
+
+# ============================================================
+# SECTION 2: HELPER FUNCTIONS
+# ============================================================
+
+def _is_staff(user):
+    """Check if user is staff or superuser."""
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+
+def _deny():
+    """Return 403 Forbidden response."""
+    return JsonResponse({'success': False, 'error': 'Không có quyền truy cập'}, status=403)
+
+
+def _get_variant_price(service_variant):
+    """Lấy giá từ variant."""
+    if service_variant and hasattr(service_variant, 'price'):
+        return Decimal(str(service_variant.price))
+    return Decimal('0')
+
+
+def _get_or_create_customer(phone, customer_name):
+    """
+    Tìm hoặc tạo CustomerProfile theo SĐT.
+    Chỉ gọi khi đã xác định được phone của đúng khách sử dụng dịch vụ.
+    KHÔNG dùng booker_phone để tạo profile cho guest.
+    """
+    from django.contrib.auth.models import User
+    import secrets
+
+    if not phone or len(phone) < 10:
+        raise ValueError(f'SĐT không hợp lệ để tạo profile: {phone!r}')
+
+    # Lookup qua CustomerProfile trước để tránh conflict username
+    try:
+        customer = CustomerProfile.objects.get(phone=phone)
+        if customer_name and customer.full_name != customer_name:
+            customer.full_name = customer_name
+            customer.save(update_fields=['full_name'])
+        return customer
+    except CustomerProfile.DoesNotExist:
+        pass
+
+    # Tạo user mới với username = "guest_<phone>", thêm suffix nếu trùng
+    base_username = f'guest_{phone}'
+    username = base_username
+    if User.objects.filter(username=username).exists():
+        username = f'{base_username}_{secrets.token_hex(3)}'
+
+    name_parts = customer_name.split() if customer_name else []
+    user = User.objects.create_user(
+        username=username,
+        password=secrets.token_hex(16),
+        first_name=name_parts[0] if name_parts else '',
+        last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+    )
+
+    customer = CustomerProfile.objects.create(
+        phone=phone,
+        full_name=customer_name or '',
+        user=user,
+    )
+    return customer
+
+
+def _resolve_or_create_customer(phone=None, email=None, customer_name=''):
+    """
+    Tìm CustomerProfile theo phone hoặc email, tạo mới nếu chưa có.
+
+    Thứ tự ưu tiên:
+    1. Có phone → tìm theo phone, tạo mới nếu không thấy (email lưu kèm)
+    2. Không có phone, có email → tìm theo email (unique), không tạo mới (thiếu phone)
+    3. Không có gì → trả None
+
+    Returns: CustomerProfile hoặc None
+    """
+    from django.contrib.auth.models import User
+    import secrets
+
+    phone = ''.join(filter(str.isdigit, phone or ''))
+    email = (email or '').strip().lower() or None
+
+    # ── 1. Có phone ──────────────────────────────────────────────────────────
+    if phone and len(phone) >= 10:
+        try:
+            customer = CustomerProfile.objects.get(phone=phone)
+            if customer_name and customer.full_name != customer_name:
+                customer.full_name = customer_name
+                customer.save(update_fields=['full_name'])
+            return customer
+        except CustomerProfile.DoesNotExist:
+            pass
+
+        # Không tìm thấy theo phone → tạo mới
+        # Nếu email đã thuộc profile khác thì không gán email (tránh unique violation)
+        safe_email = email
+        if email and CustomerProfile.objects.filter(email=email).exists():
+            safe_email = None
+
+        base_username = f'guest_{phone}'
+        username = base_username
+        if User.objects.filter(username=username).exists():
+            username = f'{base_username}_{secrets.token_hex(3)}'
+
+        name_parts = customer_name.split() if customer_name else []
+        user = User.objects.create_user(
+            username=username,
+            password=secrets.token_hex(16),
+            first_name=name_parts[0] if name_parts else '',
+            last_name=' '.join(name_parts[1:]) if len(name_parts) > 1 else '',
+            email=safe_email or '',
+        )
+        return CustomerProfile.objects.create(
+            phone=phone,
+            full_name=customer_name or '',
+            email=safe_email,
+            user=user,
+        )
+
+    # ── 2. Không có phone, chỉ có email ─────────────────────────────────────
+    if email:
+        try:
+            customer = CustomerProfile.objects.get(email=email)
+            if customer_name and customer.full_name != customer_name:
+                customer.full_name = customer_name
+                customer.save(update_fields=['full_name'])
+            return customer
+        except CustomerProfile.DoesNotExist:
+            pass
+        # Không tạo mới vì phone là NOT NULL — trả None, dùng snapshot
+
+    return None
+
+
+def _create_invoice_and_payment(booking, appointments, pay_status, payment_data, created_by):
+    """
+    Tạo Invoice + InvoiceItem + InvoicePayment cho 1 Booking.
+
+    booking: Booking instance
+    appointments: list of Appointment instances thuộc booking này
+    pay_status: trạng thái thanh toán
+    payment_data: dict chứa payment_method, amount, recorded_no, note
+    created_by: User
+    """
+    # Tính tổng từ tất cả appointments
+    subtotal = Decimal('0')
+    for appt in appointments:
+        subtotal += _get_variant_price(appt.service_variant)
+
+    discount = Decimal('0')
+    final = subtotal - discount
+
+    invoice = Invoice.objects.create(
+        booking=booking,
+        subtotal_amount=subtotal,
+        discount_amount=discount,
+        final_amount=final,
+        status=pay_status,
+        created_by=created_by,
+    )
+
+    # Tạo InvoiceItem cho từng appointment
+    for appt in appointments:
+        unit_price = _get_variant_price(appt.service_variant)
+        desc = ''
+        if appt.service_variant_id:
+            try:
+                sv = appt.service_variant
+                desc = f"{sv.service.name} — {sv.label}" if sv.service_id else sv.label or ''
+            except Exception:
+                pass
+        InvoiceItem.objects.create(
+            invoice=invoice,
+            appointment=appt,
+            service_variant=appt.service_variant,
+            description=desc,
+            quantity=1,
+            unit_price=unit_price,
+            line_total=unit_price,
+        )
+
+    if pay_status in ('UNPAID', 'REFUNDED'):
+        return invoice
+
+    if pay_status == 'PAID':
+        pay_amount = final
+    else:  # PARTIAL
+        pay_amount = Decimal(str(payment_data.get('amount', 0)))
+
+    InvoicePayment.objects.create(
+        invoice=invoice,
+        amount=pay_amount,
+        payment_method=payment_data.get('payment_method', 'CASH'),
+        transaction_status='SUCCESS',
+        recorded_by=created_by,
+        recorded_no=payment_data.get('recorded_no', '') or None,
+        note=payment_data.get('note', '') or None,
+    )
+
+    return invoice
+
+
+def _validate_payment_data(pay_status, payment_data, final_amount=None):
+    """Validate payment fields."""
+    if pay_status in ('UNPAID', 'REFUNDED'):
+        return True, ''
+
+    method = (payment_data.get('payment_method') or '').strip()
+    valid_methods = ['CASH', 'CARD', 'BANK_TRANSFER', 'E_WALLET']
+    if not method or method not in valid_methods:
+        return False, 'Vui lòng chọn phương thức thanh toán'
+
+    if pay_status == 'PARTIAL':
+        try:
+            amount = Decimal(str(payment_data.get('amount', 0)))
+        except Exception:
+            return False, 'Số tiền thanh toán không hợp lệ'
+        if amount <= 0:
+            return False, 'Số tiền thanh toán phải lớn hơn 0'
+        if final_amount and amount >= Decimal(str(final_amount)):
+            return False, 'Số tiền thanh toán một phần phải nhỏ hơn tổng tiền'
+
+    return True, ''
+
+
+def _validate_appointment_data(data):
+    """Validate dữ liệu appointment (khách/dịch vụ/phòng/giờ) trước khi tạo."""
+    import re
+    _EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+    errors = []
+    cleaned = {}
+
+    # Tên khách (bắt buộc)
+    customer_name = data.get('customer_name', '').strip()
+    if not customer_name:
+        errors.append('Vui lòng nhập tên khách')
+    else:
+        cleaned['customer_name'] = customer_name
+
+    # SĐT khách (tuỳ chọn — nhưng nếu có phải đủ 10 số)
+    phone = ''.join(filter(str.isdigit, data.get('phone', '')))
+    if phone and len(phone) < 10:
+        errors.append('Số điện thoại khách không hợp lệ (tối thiểu 10 số)')
+    else:
+        cleaned['phone'] = phone or None
+
+    # Email khách (tuỳ chọn — validate format nếu có)
+    guest_email = data.get('email', '').strip()
+    if guest_email and not _EMAIL_RE.match(guest_email):
+        errors.append('Email không hợp lệ')
+    else:
+        cleaned['email'] = guest_email or None
+
+    # Dịch vụ (bắt buộc — phải có variant_id)
+    variant_id = data.get('variant_id')
+    if not variant_id:
+        errors.append('Vui lòng chọn gói dịch vụ')
+    else:
+        try:
+            variant = ServiceVariant.objects.get(id=variant_id)
+            cleaned['service_variant'] = variant
+        except ServiceVariant.DoesNotExist:
+            errors.append('Gói dịch vụ không tồn tại')
+
+    # Trạng thái appointment
+    status = str(data.get('status') or 'NOT_ARRIVED').strip().upper()
+    valid_statuses = {choice[0] for choice in Appointment.STATUS_CHOICES}
+    if status not in valid_statuses:
+        errors.append('Trạng thái không hợp lệ')
+    cleaned['status'] = status
+
+    # Ngày (bắt buộc)
+    date_str = data.get('date_str', '')
+    if not date_str:
+        errors.append('Vui lòng chọn ngày hẹn')
+    else:
+        try:
+            cleaned['appointment_date'] = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            errors.append('Định dạng ngày không hợp lệ')
+
+    # Giờ (bắt buộc)
+    time_str = data.get('time_str', '')
+    if not time_str:
+        errors.append('Vui lòng chọn giờ hẹn')
+    else:
+        try:
+            cleaned['appointment_time'] = datetime.strptime(time_str, '%H:%M').time()
+        except ValueError:
+            errors.append('Định dạng giờ không hợp lệ')
+
+    # Duration từ variant hoặc fallback 60
+    if 'service_variant' in cleaned:
+        cleaned['duration_minutes'] = cleaned['service_variant'].duration_minutes
+    else:
+        cleaned['duration_minutes'] = 60
+
+    # Phòng (bắt buộc)
+    room_id = data.get('room_id')
+    if not room_id:
+        errors.append('Vui lòng chọn phòng')
+    else:
+        try:
+            cleaned['room'] = Room.objects.get(code=room_id)
+        except Room.DoesNotExist:
+            errors.append('Phòng không tồn tại')
+
+    # Validate nâng cao: trùng lịch / sức chứa phòng
+    if not errors and 'appointment_date' in cleaned and 'appointment_time' in cleaned:
+        room_code = cleaned['room'].code if 'room' in cleaned else None
+        validation_result = validate_appointment_create(
+            appointment_date=cleaned['appointment_date'],
+            appointment_time=cleaned['appointment_time'],
+            duration_minutes=cleaned['duration_minutes'],
+            room_code=room_code,
+            exclude_appointment_code=None,
+        )
+        if not validation_result['valid']:
+            for err_msg in validation_result['errors']:
+                lower = err_msg.lower()
+                if 'đủ' in lower or 'capacity' in lower or 'chỗ' in lower:
+                    errors.append('Phòng đã đủ chỗ ở khung giờ này, vui lòng chọn phòng hoặc thời gian khác.')
+                elif 'trùng' in lower or 'conflict' in lower or 'đã có lịch' in lower:
+                    errors.append('Khung giờ đã có lịch, vui lòng chọn thời gian khác.')
+                else:
+                    errors.append(err_msg)
+
+    return {'valid': len(errors) == 0, 'errors': errors, 'cleaned_data': cleaned}
+
+
+# ============================================================
+# SECTION 3: SHARED ENDPOINTS
+# ============================================================
+
+@require_http_methods(["GET"])
+def api_appointments_search(request):
+    """
+    [SHARED] GET /api/appointments/search/
+
+    Tìm kiếm lịch hẹn toàn hệ thống.
+    """
+    if not _is_staff(request.user):
+        return _deny()
+
+    q          = request.GET.get('q', '').strip()
+    name       = request.GET.get('name', '').strip()
+    code       = request.GET.get('code', '').strip()
+    phone      = request.GET.get('phone', '').strip()
+    email      = request.GET.get('email', '').strip()
+    status     = request.GET.get('status', '').strip().upper()
+    source     = request.GET.get('source', '').strip()
+    service_id = request.GET.get('service', '').strip()
+    room_code  = request.GET.get('room', '').strip()
+    date_from  = request.GET.get('date_from', '').strip()
+    date_to    = request.GET.get('date_to', '').strip()
+
+    has_condition = any([q, name, code, phone, email, status, source, service_id, room_code, date_from, date_to])
+    if not has_condition:
+        return JsonResponse({'success': False, 'error': 'Vui lòng nhập điều kiện tìm kiếm'}, status=400)
+
+    qs = Appointment.objects.filter(deleted_at__isnull=True).select_related('booking', 'customer', 'service_variant__service', 'room')
+
+    if q:
+        qs = qs.filter(
+            Q(customer_name_snapshot__icontains=q) |
+            Q(booking__booker_name__icontains=q) |
+            Q(customer__full_name__icontains=q) |
+            Q(customer_phone_snapshot__icontains=q) |
+            Q(booking__booker_phone__icontains=q) |
+            Q(customer_email_snapshot__icontains=q) |
+            Q(booking__booker_email__icontains=q) |
+            Q(appointment_code__icontains=q) |
+            Q(booking__booking_code__icontains=q) |
+            Q(customer__phone__icontains=q)
+        )
+    if name:
+        qs = qs.filter(
+            Q(customer_name_snapshot__icontains=name) |
+            Q(booking__booker_name__icontains=name)
+        )
+    if code:
+        qs = qs.filter(
+            Q(appointment_code__icontains=code) |
+            Q(booking__booking_code__icontains=code)
+        )
+    if phone:
+        qs = qs.filter(
+            Q(customer_phone_snapshot__icontains=phone) |
+            Q(booking__booker_phone__icontains=phone) |
+            Q(customer__phone__icontains=phone)
+        )
+    if email:
+        qs = qs.filter(
+            Q(customer_email_snapshot__icontains=email) |
+            Q(booking__booker_email__icontains=email)
+        )
+    if status:
+        # Tìm theo appointment status hoặc booking status
+        qs = qs.filter(
+            Q(status=status) | Q(booking__status=status)
+        )
+    if source:
+        qs = qs.filter(booking__source=source)
+    if service_id:
+        qs = qs.filter(service_variant__service_id=service_id)
+    if room_code:
+        qs = qs.filter(room__code=room_code)
+    if date_from:
+        qs = qs.filter(appointment_date__gte=date_from)
+    if date_to:
+        qs = qs.filter(appointment_date__lte=date_to)
+
+    results = list(qs.order_by('-appointment_date', '-appointment_time')[:100])
+
+    if name:
+        name_lower = name.lower()
+        results = [a for a in results if
+                   name_lower in (a.customer_name_snapshot or '').lower() or
+                   name_lower in (a.booking.booker_name or '').lower()]
+
+    return JsonResponse({'success': True, 'appointments': [serialize_appointment(a) for a in results]})
+
+
+@require_http_methods(["GET"])
+def api_customer_search(request):
+    """
+    [SHARED] GET /api/customers/search/?q=...
+
+    Tìm khách hàng theo tên, SĐT hoặc email.
+
+    TAB: Used by both Room Calendar and Booking Requests
+    Methods: GET
+
+    Query params:
+    - q: Search query (min 2 characters)
+
+    Returns: Max 10 customers with id, fullName, phone, email
+    """
+    if not _is_staff(request.user):
+        return _deny()
+
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'success': True, 'customers': []})
+
+    customers = CustomerProfile.objects.filter(
+        Q(full_name__icontains=q) | Q(phone__icontains=q) | Q(user__email__icontains=q)
+    ).select_related('user')[:10]
+
+    return JsonResponse({
+        'success': True,
+        'customers': [
+            {'id': c.id, 'fullName': c.full_name, 'phone': c.phone, 'email': c.user.email if c.user else ''}
+            for c in customers
+        ]
+    })
+
+
+@require_http_methods(["GET", "POST"])
+@staff_api
+def api_appointment_rebook(request, appointment_code):
+    """
+    [SHARED] GET/POST /api/appointments/<code>/rebook/
+
+    GET: Trả về thông tin cần thiết để đặt lại lịch từ lịch đã hủy/từ chối
+    POST: Đặt lại trạng thái về PENDING
+
+    TAB: Used by both Room Calendar and Booking Requests
+    Methods: GET, POST
+
+    Business logic:
+    - Only allows rebooking CANCELLED or REJECTED appointments
+    - GET returns pre-fill data for form
+    - POST changes status to PENDING
+    """
+    appointment, error = get_or_404(Appointment, appointment_code=appointment_code, deleted_at__isnull=True)
+    if error:
+        return error
+
+    # Trả về thông tin cần thiết để FE pre-fill form tạo mới
+    # Rebook: Booking.status CANCELLED/REJECTED → reset về PENDING, Appointment.status → NOT_ARRIVED
+    current_booking_status = str(appointment.booking.status or '').strip().upper() if appointment.booking else ''
+    current_appt_status = str(appointment.status or '').strip().upper()
+    if current_booking_status not in ('CANCELLED', 'REJECTED') and current_appt_status not in ('CANCELLED',):
+        return JsonResponse(
+            {
+                'success': False,
+                'error': 'Chỉ có thể đặt lại lịch đã hủy hoặc đã từ chối.',
+                'currentStatus': current_booking_status or current_appt_status,
+            },
+            status=400,
+        )
+
+    if request.method == 'POST':
+        # Reset Booking về PENDING, Appointment về NOT_ARRIVED
+        booking = appointment.booking
+        if booking:
+            booking.status = 'PENDING'
+            booking.save(update_fields=['status', 'updated_at'])
+        appointment.status = 'NOT_ARRIVED'
+        appointment.save(update_fields=['status', 'updated_at'])
+        return JsonResponse({
+            'success': True,
+            'message': f'Đã đặt lại lịch hẹn {appointment.appointment_code} về trạng thái chờ xác nhận.',
+            'appointment': serialize_appointment(appointment),
+        })
+
+    variant_available = False
+    variant_warning = None
+    if appointment.service_variant_id:
+        try:
+            sv = ServiceVariant.objects.get(id=appointment.service_variant_id)
+            # Kiểm tra service còn active không
+            if getattr(sv.service, 'status', 'ACTIVE') == 'ACTIVE':
+                variant_available = True
+            else:
+                variant_warning = 'Dịch vụ/gói cũ không còn khả dụng, vui lòng chọn lại.'
+        except ServiceVariant.DoesNotExist:
+            variant_warning = 'Dịch vụ/gói cũ không còn khả dụng, vui lòng chọn lại.'
+
+    booking = appointment.booking
+    return JsonResponse({
+        'success': True,
+        'rebook': {
+            'bookerName':   booking.booker_name if booking else '',
+            'bookerPhone':  booking.booker_phone if booking else '',
+            'bookerEmail':  booking.booker_email or '' if booking else '',
+            'customerName':  appointment.customer_name_snapshot,
+            'customerPhone': appointment.customer_phone_snapshot or '',
+            'customerEmail': appointment.customer_email_snapshot or '',
+            'serviceId':    appointment.service_variant.service_id if variant_available else None,
+            'variantId':    appointment.service_variant_id if variant_available else None,
+            'notes':        booking.booker_notes or '' if booking else '',
+            'source':       booking.source or 'DIRECT' if booking else 'DIRECT',
+            'variantWarning': variant_warning,
+        }
+    })
+
+
+# ============================================================

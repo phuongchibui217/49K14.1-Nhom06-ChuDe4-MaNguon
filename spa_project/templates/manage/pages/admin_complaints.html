@@ -1,0 +1,261 @@
+{% extends "manage/base.html" %}
+{% load static %}
+
+{% block title %}Quản lý khiếu nại - Spa ANA Admin{% endblock %}
+
+{% block page_title %}Quản lý khiếu nại{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Filter Section */
+    .filter-section { 
+        background: white; 
+        border-radius: 12px; 
+        padding: 1.25rem 1.5rem; 
+        margin-bottom: 1.5rem; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+    }
+    .filter-section h6 { 
+        color: #1e3a5f; 
+        font-weight: 600; 
+        margin-bottom: 1rem; 
+    }
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+    }
+    .filter-row .search-input {
+        flex: 1 1 250px;
+        min-width: 200px;
+    }
+    .filter-row .filter-select {
+        flex: 0 0 160px;
+        min-width: 140px;
+    }
+    .filter-row .filter-btn {
+        flex: 0 0 100px;
+        min-width: 80px;
+    }
+    
+    /* Status Badge - không wrap */
+    .status-badge { 
+        padding: 0.35rem 0.75rem; 
+        border-radius: 20px; 
+        font-size: 0.8rem; 
+        font-weight: 600; 
+        white-space: nowrap;
+        display: inline-block;
+    }
+    .status-badge.status-new { background: #e3f2fd; color: #1976d2; }
+    .status-badge.status-pending { background: #fff3cd; color: #856404; }
+    .status-badge.status-assigned { background: #e8f5e9; color: #388e3c; }
+    .status-badge.status-processing { background: #cce5ff; color: #004085; }
+    .status-badge.status-waiting_customer { background: #fff8e1; color: #ffa000; }
+    .status-badge.status-resolved { background: #d4edda; color: #155724; }
+    .status-badge.status-closed { background: #f5f5f5; color: #757575; }
+    
+    /* Priority Badge */
+    .priority-badge { 
+        padding: 0.25rem 0.5rem; 
+        border-radius: 4px; 
+        font-size: 0.75rem; 
+        font-weight: 600; 
+        white-space: nowrap;
+    }
+    .priority-badge.high { background: #dc3545; color: white; }
+    .priority-badge.medium { background: #ffc107; color: #212529; }
+    .priority-badge.low { background: #28a745; color: white; }
+    
+    /* Action Buttons - không wrap */
+    .btn-action { 
+        padding: 0.4rem 0.85rem; 
+        border-radius: 6px; 
+        font-size: 0.85rem; 
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .btn-view { 
+        background: #e3f2fd; 
+        color: #1976d2; 
+        border: none; 
+    }
+    .btn-view:hover { 
+        background: #bbdefb; 
+    }
+    
+    /* Table */
+    .admin-table thead th { 
+        background: #1e3a5f; 
+        color: white; 
+        font-weight: 600; 
+        white-space: nowrap;
+    }
+    .admin-table td {
+        vertical-align: middle;
+    }
+    .action-col {
+        min-width: 100px;
+    }
+    
+    /* Card container */
+    .table-card {
+        border-radius: 12px; 
+        border: none; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    /* Select styling */
+    .form-select {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Button không xuống dòng */
+    .btn-nowrap {
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h6><i class="fas fa-filter me-2"></i>Bộ lọc & Tìm kiếm</h6>
+        <form method="get" class="filter-row" id="complaintsFilterForm">
+            <div class="search-input">
+                <input type="text" class="form-control" name="search" id="complaintsSearch" value="{{ search }}" placeholder="Tìm kiếm theo mã, tên, email, SĐT...">
+            </div>
+            <div class="filter-select">
+                <select class="form-select" name="status" id="complaintsStatus">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="NEW" {% if status_filter == 'NEW' %}selected{% endif %}>Mới tạo</option>
+                    <option value="IN_PROGRESS" {% if status_filter == 'IN_PROGRESS' %}selected{% endif %}>Đang xử lý</option>
+                    <option value="RESOLVED" {% if status_filter == 'RESOLVED' %}selected{% endif %}>Đã hoàn thành</option>
+                </select>
+            </div>
+            <div class="filter-btn">
+                <button type="button" class="btn btn-secondary w-100 btn-nowrap" id="complaintsFilterBtn">
+                    <i class="fas fa-filter me-1"></i> Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                    <th>Mã KN</th>
+                        <th>Tiêu đề</th>
+                        <th>Khách hàng</th>
+                        <th>Trạng thái</th>
+                        <th>Người xử lý</th>
+                        <th>Ngày tạo</th>
+                        <th class="action-col">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td><strong>{{ complaint.code }}</strong></td>
+                        <td>{{ complaint.title|truncatechars:30 }}</td>
+                        <td>
+                            {{ complaint.customer_name_snapshot }}<br>
+                            <small class="text-muted">{{ complaint.customer_phone_snapshot }}</small>
+                        </td>
+                        <td><span class="status-badge status-{{ complaint.status }}">{{ complaint.get_status_display }}</span></td>
+                        <td>
+                            {% if complaint.assigned_to %}
+                                {{ complaint.assigned_to.get_full_name|default:complaint.assigned_to.username }}
+                            {% else %}
+                                <em class="text-muted">Chưa phân công</em>
+                            {% endif %}
+                        </td>
+                        <td>{{ complaint.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="action-col">
+                            <a href="{% url 'complaints:admin_complaint_detail' complaint.id %}" class="btn btn-action btn-view">
+                                <i class="fas fa-eye"></i> <span>Chi tiết</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
+                            <h5 class="text-muted">Không tìm thấy khiếu nại nào</h5>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if complaints.has_other_pages %}
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if complaints.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ complaints.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in complaints.paginator.page_range %}
+                        {% if complaints.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > complaints.number|add:'-3' and num < complaints.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&search={{ search }}&status={{ status_filter }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if complaints.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ complaints.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    FilterManager.initFormPage({
+        formId:  'complaintsFilterForm',
+        btnId:   'complaintsFilterBtn',
+        fields:  ['complaintsSearch', 'complaintsStatus'],
+    });
+});
+</script>
+{% endblock %}

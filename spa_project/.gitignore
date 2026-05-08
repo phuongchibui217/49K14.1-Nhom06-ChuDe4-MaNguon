@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+local_settings.py
+
+/staticfiles/
+# /media/ — KHÔNG ignore, để ảnh upload được commit vào git cùng source code
+# Nếu chuyển sang production với S3/cloud storage thì bỏ comment dòng dưới lại
+# /media/
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.env
+*.pem
+
+# Database
+db.sqlite3
+db.sqlite3-shm
+db.sqlite3-wal
+test_db.sqlite3

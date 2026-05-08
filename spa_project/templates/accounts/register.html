@@ -1,0 +1,453 @@
+{% extends 'spa/base.html' %}
+
+{% block title %}Đăng ký - Spa ANA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-card {
+        max-width: 500px;
+        margin: 2rem auto;
+    }
+    .field-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    .password-strength {
+        height: 5px;
+        border-radius: 2px;
+        margin-top: 5px;
+        transition: all 0.3s;
+    }
+    .password-strength.weak {
+        width: 33%;
+        background: #dc3545;
+    }
+    .password-strength.medium {
+        width: 66%;
+        background: #ffc107;
+    }
+    .password-strength.strong {
+        width: 100%;
+        background: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow border-0 auth-card">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-spa text-warning fa-3x mb-3"></i>
+                            <h3 class="fw-bold">Đăng ký tài khoản</h3>
+                            <p class="text-muted">Tạo tài khoản để đặt lịch và nhận ưu đãi</p>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+<form method="post" action="" id="registerForm" novalidate>
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">
+                                    Tên đăng nhập <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                                       id="id_username"
+                                       name="username"
+                                       placeholder="Tên đăng nhập (không dấu, không khoảng trắng)"
+                                       autocomplete="username"
+                                       required
+                                       value="{{ form.username.value|default:'' }}">
+                                {% if form.username.errors %}
+                                {% for error in form.username.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <small class="text-muted">Dùng để đăng nhập, ví dụ: nguyenvana</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_full_name" class="form-label">
+                                    Họ và tên <span class="text-danger">*</span>
+                                </label>
+                                <input type="text"
+                                       class="form-control {% if form.full_name.errors %}is-invalid{% endif %}"
+                                       id="id_full_name"
+                                       name="full_name"
+                                       placeholder="Nhập họ và tên đầy đủ"
+                                       required
+                                       value="{{ form.full_name.value|default:'' }}">
+                                {% if form.full_name.errors %}
+                                {% for error in form.full_name.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_phone" class="form-label">
+                                    Số điện thoại <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel"
+                                       class="form-control {% if form.phone.errors %}is-invalid{% endif %}"
+                                       id="id_phone"
+                                       name="phone"
+                                       placeholder="Nhập số điện thoại (10-11 số)"
+                                       pattern="[0-9]{10,11}"
+                                       required
+                                       value="{{ form.phone.value|default:'' }}">
+                                {% if form.phone.errors %}
+                                {% for error in form.phone.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <small class="text-muted">Ví dụ: 0912345678</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">
+                                    Gmail <span class="text-danger">*</span>
+                                </label>
+                                <input type="email"
+                                       class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                                       id="id_email"
+                                       name="email"
+                                       placeholder="Nhập địa chỉ Gmail (ten@gmail.com)"
+                                       autocomplete="email"
+                                       required
+                                       value="{{ form.email.value|default:'' }}">
+                                {% if form.email.errors %}
+                                {% for error in form.email.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <small class="text-muted">Dùng để khôi phục mật khẩu, ví dụ: ten@gmail.com</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_gender" class="form-label">
+                                        Giới tính <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select {% if form.gender.errors %}is-invalid{% endif %}"
+                                            id="id_gender" name="gender" required>
+                                        <option value="">-- Chọn giới tính --</option>
+                                        <option value="Nam" {% if form.gender.value == 'Nam' %}selected{% endif %}>Nam</option>
+                                        <option value="Nu" {% if form.gender.value == 'Nu' %}selected{% endif %}>Nữ</option>
+                                        <option value="Khac" {% if form.gender.value == 'Khac' %}selected{% endif %}>Khác</option>
+                                    </select>
+                                    {% if form.gender.errors %}
+                                    {% for error in form.gender.errors %}
+                                    <div class="field-error">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_dob" class="form-label">Ngày sinh</label>
+                                    <input type="date"
+                                           class="form-control {% if form.dob.errors %}is-invalid{% endif %}"
+                                           id="id_dob"
+                                           name="dob"
+                                           value="{{ form.dob.value|default:'' }}">
+                                    {% if form.dob.errors %}
+                                    {% for error in form.dob.errors %}
+                                    <div class="field-error">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password1" class="form-label">
+                                    Mật khẩu <span class="text-danger">*</span>
+                                </label>
+                                <div class="pw-wrapper">
+                                    <input type="password"
+                                           class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                                           id="id_password1"
+                                           name="password1"
+                                           placeholder="Nhập mật khẩu (ít nhất 6 ký tự)"
+                                           required>
+                                    <button class="pw-toggle-btn" type="button" aria-label="Hiện/ẩn mật khẩu">
+                                        <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+                                        <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="passwordStrength" style="width: 0%"></div>
+                                {% if form.password1.errors %}
+                                {% for error in form.password1.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <small class="text-muted">Mật khẩu ít nhất 6 ký tự</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_password2" class="form-label">
+                                    Xác nhận mật khẩu <span class="text-danger">*</span>
+                                </label>
+                                <div class="pw-wrapper">
+                                    <input type="password"
+                                           class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                                           id="id_password2"
+                                           name="password2"
+                                           placeholder="Nhập lại mật khẩu"
+                                           required>
+                                    <button class="pw-toggle-btn" type="button" aria-label="Hiện/ẩn mật khẩu">
+                                        <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+                                        <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+                                    </button>
+                                </div>
+                                {% if form.password2.errors %}
+                                {% for error in form.password2.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_address" class="form-label">Địa chỉ</label>
+                                <textarea class="form-control"
+                                          id="id_address"
+                                          name="address"
+                                          rows="2"
+                                          placeholder="Nhập địa chỉ của bạn">{{ form.address.value|default:'' }}</textarea>
+                            </div>
+
+                            <!-- Modal Điều khoản & Chính sách -->
+                            <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold" id="termsModalLabel">
+                                                <i class="fas fa-file-contract text-warning me-2"></i>Điều khoản &amp; Chính sách bảo mật
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                        </div>
+                                        <div class="modal-body" style="font-size:14px; line-height:1.7;">
+
+                                            <h6 class="fw-bold text-warning mb-3">ĐIỀU KHOẢN DỊCH VỤ</h6>
+                                            <p>Khi sử dụng website và đăng ký tài khoản, bạn đồng ý với các điều khoản sau:</p>
+
+                                            <p class="fw-semibold mb-1">1. Tài khoản người dùng</p>
+                                            <ul>
+                                                <li>Người dùng cam kết cung cấp thông tin chính xác, đầy đủ.</li>
+                                                <li>Bạn chịu trách nhiệm bảo mật thông tin đăng nhập.</li>
+                                                <li>Mọi hoạt động phát sinh từ tài khoản đều thuộc trách nhiệm của bạn.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">2. Sử dụng dịch vụ</p>
+                                            <ul>
+                                                <li>Không sử dụng website vào mục đích gian lận, vi phạm pháp luật.</li>
+                                                <li>Không gây ảnh hưởng đến hệ thống hoặc trải nghiệm của người dùng khác.</li>
+                                                <li>Không chia sẻ hoặc chuyển nhượng tài khoản trái phép.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">3. Đặt lịch dịch vụ</p>
+                                            <ul>
+                                                <li>Khách hàng cần cung cấp thông tin chính xác khi đặt lịch.</li>
+                                                <li>Spa có quyền xác nhận, thay đổi hoặc từ chối lịch hẹn nếu cần thiết.</li>
+                                                <li>Trường hợp hủy lịch, khách hàng cần thông báo trước theo quy định của spa.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">4. Giới hạn trách nhiệm</p>
+                                            <ul>
+                                                <li>Spa không chịu trách nhiệm trong trường hợp gián đoạn dịch vụ do lỗi hệ thống, mạng hoặc yếu tố ngoài kiểm soát.</li>
+                                                <li>Người dùng tự chịu trách nhiệm với các quyết định sử dụng dịch vụ.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">5. Quyền của spa</p>
+                                            <ul>
+                                                <li>Có quyền tạm khóa hoặc chấm dứt tài khoản nếu phát hiện vi phạm.</li>
+                                                <li>Có quyền thay đổi nội dung dịch vụ hoặc điều khoản mà không cần thông báo trước.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">6. Điều khoản chung</p>
+                                            <ul>
+                                                <li>Việc tiếp tục sử dụng dịch vụ đồng nghĩa với việc bạn chấp nhận các điều khoản mới nhất.</li>
+                                                <li>Người dùng có thể ngừng sử dụng dịch vụ bất cứ lúc nào.</li>
+                                            </ul>
+                                            <p class="fst-italic text-muted">Bằng việc sử dụng dịch vụ, bạn xác nhận đã đọc và đồng ý với các điều khoản trên.</p>
+
+                                            <hr>
+
+                                            <h6 class="fw-bold text-warning mb-3 mt-3">CHÍNH SÁCH BẢO MẬT</h6>
+                                            <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của khách hàng khi sử dụng website.</p>
+
+                                            <p class="fw-semibold mb-1">1. Thông tin thu thập</p>
+                                            <p>Chúng tôi có thể thu thập các thông tin sau:</p>
+                                            <ul>
+                                                <li>Họ tên, số điện thoại, email</li>
+                                                <li>Thông tin đặt lịch dịch vụ</li>
+                                                <li>Dữ liệu truy cập website (IP, trình duyệt, thời gian truy cập)</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">2. Mục đích sử dụng</p>
+                                            <p>Thông tin được sử dụng để:</p>
+                                            <ul>
+                                                <li>Xác nhận và quản lý lịch hẹn</li>
+                                                <li>Liên hệ, hỗ trợ khách hàng</li>
+                                                <li>Cải thiện chất lượng dịch vụ và trải nghiệm người dùng</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">3. Bảo mật thông tin</p>
+                                            <ul>
+                                                <li>Thông tin cá nhân được lưu trữ và bảo vệ bằng các biện pháp bảo mật phù hợp.</li>
+                                                <li>Chỉ nhân sự có thẩm quyền mới được truy cập dữ liệu.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">4. Chia sẻ thông tin</p>
+                                            <ul>
+                                                <li>Chúng tôi không chia sẻ thông tin cá nhân cho bên thứ ba khi chưa có sự đồng ý.</li>
+                                                <li>Ngoại trừ trường hợp có yêu cầu từ cơ quan pháp luật.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">5. Quyền của người dùng</p>
+                                            <ul>
+                                                <li>Người dùng có quyền kiểm tra, chỉnh sửa hoặc yêu cầu xóa thông tin cá nhân.</li>
+                                                <li>Có thể liên hệ với chúng tôi để thực hiện các quyền này.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">6. Cookies và dữ liệu theo dõi</p>
+                                            <ul>
+                                                <li>Website có thể sử dụng cookies để nâng cao trải nghiệm người dùng.</li>
+                                                <li>Bạn có thể tùy chỉnh trình duyệt để từ chối cookies.</li>
+                                            </ul>
+
+                                            <p class="fw-semibold mb-1">7. Thay đổi chính sách</p>
+                                            <ul>
+                                                <li>Chính sách có thể được cập nhật theo thời gian.</li>
+                                                <li>Việc tiếp tục sử dụng website đồng nghĩa với việc bạn đồng ý với các thay đổi.</li>
+                                            </ul>
+                                            <p class="fst-italic text-muted">Chúng tôi cam kết bảo vệ thông tin của bạn một cách an toàn và minh bạch.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-warning fw-semibold px-4" id="btnAgreeTerms" data-bs-dismiss="modal">
+                                                <i class="fas fa-check me-1"></i>Tôi đã đọc và đồng ý
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox"
+                                       class="form-check-input {% if form.agree_terms.errors %}is-invalid{% endif %}"
+                                       id="id_agree_terms"
+                                       name="agree_terms"
+                                       required>
+                                <label class="form-check-label" for="id_agree_terms">
+                                    Tôi đồng ý với
+                                    <a href="#" class="text-warning fw-semibold" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản dịch vụ</a>
+                                    và
+                                    <a href="#" class="text-warning fw-semibold" data-bs-toggle="modal" data-bs-target="#termsModal">Chính sách bảo mật</a>
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {% if form.agree_terms.errors %}
+                                {% for error in form.agree_terms.errors %}
+                                <div class="field-error">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100 btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Đăng ký
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="text-muted mb-0">
+                                Đã có tài khoản?
+<a href="{% url 'accounts:login' %}" class="text-warning fw-bold">Đăng nhập</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    if (password1 && passwordStrength) {
+        password1.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            passwordStrength.className = 'password-strength';
+            if (strength <= 2) passwordStrength.classList.add('weak');
+            else if (strength <= 3) passwordStrength.classList.add('medium');
+            else passwordStrength.classList.add('strong');
+        });
+    }
+
+    if (password2 && password1) {
+        password2.addEventListener('input', function() {
+            if (this.value && this.value !== password1.value) {
+                this.setCustomValidity('Mật khẩu không khớp');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+
+    // Tự tick checkbox khi bấm "Tôi đã đọc và đồng ý" trong modal
+    const btnAgree = document.getElementById('btnAgreeTerms');
+    if (btnAgree) {
+        btnAgree.addEventListener('click', function () {
+            const cb = document.getElementById('id_agree_terms');
+            if (cb) cb.checked = true;
+        });
+    }
+});
+</script>
+{% endblock %}

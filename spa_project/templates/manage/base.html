@@ -1,0 +1,269 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Spa ANA{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now 'His' %}">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}?v={% now 'His' %}">
+
+    {% block extra_css %}{% endblock %}
+
+    <!-- Password toggle global style -->
+    <style>
+        .pw-wrapper {
+            position: relative;
+        }
+        .pw-wrapper input[type="password"],
+        .pw-wrapper input[type="text"] {
+            padding-right: 42px;
+        }
+        .pw-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            z-index: 5;
+        }
+        .pw-toggle-btn:hover { color: #374151; }
+        .pw-toggle-btn svg { width: 18px; height: 18px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        {% include 'manage/includes/sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="admin-content">
+            {% include 'manage/includes/header.html' %}
+
+            <!-- Main Content Area -->
+            <main class="admin-main">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận đăng xuất -->
+    <style>
+        #logoutConfirmModal.modal {
+            backdrop-filter: blur(3px);
+            background: rgba(0, 0, 0, 0.35);
+        }
+        .modal-backdrop {
+            backdrop-filter: blur(3px);
+        }
+        #logoutConfirmModal .modal-dialog {
+            max-width: 400px;
+            width: 92%;
+        }
+        #logoutConfirmModal .modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.08);
+            padding: 32px 28px 28px;
+            text-align: center;
+            background: #ffffff;
+            animation: logoutModalIn 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        @keyframes logoutModalIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .logout-modal-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2.5px solid #e53935;
+            color: #e53935;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .logout-modal-title {
+            font-size: 21px;
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 10px;
+            line-height: 1.3;
+        }
+        .logout-modal-desc {
+            font-size: 15px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin: 0 0 28px;
+        }
+        .logout-modal-actions {
+            display: flex;
+            gap: 14px;
+        }
+        .logout-modal-actions .btn-cancel,
+        .logout-modal-actions .btn-logout-confirm {
+            flex: 1;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+        }
+        .logout-modal-actions .btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .logout-modal-actions .btn-cancel:hover {
+            background: #e5e7eb;
+        }
+        .logout-modal-actions .btn-logout-confirm {
+            background: #e53935;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
+        }
+        .logout-modal-actions .btn-logout-confirm:hover {
+            background: #c62828;
+            box-shadow: 0 6px 18px rgba(229, 57, 53, 0.38);
+            transform: translateY(-1px);
+        }
+    </style>
+
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="d-flex justify-content-center">
+                    <div class="logout-modal-icon" aria-hidden="true">!</div>
+                </div>
+                <h5 class="logout-modal-title" id="logoutConfirmModalLabel">Xác nhận đăng xuất</h5>
+                <p class="logout-modal-desc">Bạn có chắc chắn muốn đăng xuất?</p>
+                <div class="logout-modal-actions">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-logout-confirm" id="confirmLogoutBtn">Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/dialog-modal.js' %}?v={% now 'His' %}"></script>
+
+    <!-- Shared filter behavior — dùng chung toàn hệ thống -->
+    <script src="{% static 'js/filter-manager.js' %}?v={% now 'His' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Password toggle global JS -->
+    <script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        const btnEl = btn || input.closest('.pw-wrapper')?.querySelector('.pw-toggle-btn');
+        if (btnEl) {
+            btnEl.querySelector('.icon-eye').style.display = isHidden ? 'none' : 'block';
+            btnEl.querySelector('.icon-eye-off').style.display = isHidden ? 'block' : 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.pw-toggle-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const wrapper = btn.closest('.pw-wrapper');
+                const input = wrapper.querySelector('input');
+                togglePassword(input.id, btn);
+            });
+        });
+    });
+    </script>
+
+    {% if request.user.is_authenticated %}
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <script>
+        window.adminSidebarChatBadgeConfig = {
+            sessionsSocketPath: "/ws/admin/chat/sessions/"
+        };
+    </script>
+    <script src="{% static 'js/admin-sidebar-chat-badge.js' %}"></script>
+
+    <script>
+        window.adminSidebarBookingBadgeConfig = {
+            countUrl: "{% url 'appointments:api_booking_pending_count' %}"
+        };
+    </script>
+    <script src="{% static 'js/admin-sidebar-booking-badge.js' %}?v={% now 'His' %}"></script>
+
+    <script>
+        window.adminSidebarComplaintsBadgeConfig = {
+            countUrl: "{% url 'complaints:api_complaints_new_count' %}"
+        };
+    </script>
+    <script src="{% static 'js/admin-sidebar-complaints-badge.js' %}?v={% now 'His' %}"></script>
+    {% endif %}
+    {% endif %}
+
+    <script>
+        // togglePassword - dùng cho tất cả form có password trong manage
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+
+            // Xử lý xác nhận đăng xuất
+            const logoutLinks = document.querySelectorAll('.logout-link');
+
+            logoutLinks.forEach(function(link) {
+                link.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const ok = await window.showConfirm('Bạn có chắc chắn muốn đăng xuất?', {
+                        title: 'Xác nhận đăng xuất',
+                        confirmText: 'Đăng xuất',
+                        cancelText: 'Hủy'
+                    });
+                    if (ok) window.location.href = this.href;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

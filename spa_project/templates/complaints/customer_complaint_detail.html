@@ -1,0 +1,417 @@
+{% extends 'spa/base.html' %}
+{% load static %}
+
+{% block title %}{{ complaint.code }} - Chi tiết khiếu nại{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* page-header: dung global style.css */
+    .page-header { margin-bottom: 2.5rem; }
+
+    .detail-section { padding: 0 0 4rem; }
+
+    /* Cards */
+    .detail-card {
+        background: var(--bg-white);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--gold);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    .detail-card-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--gold-muted);
+    }
+    .detail-card-body { padding: 1.5rem; }
+    .detail-card-title {
+        color: var(--text-primary);
+        font-weight: 700;
+        margin-bottom: .25rem;
+        font-size: 1.1rem;
+    }
+    .detail-card-subtitle { color: var(--text-muted); font-size: .85rem; margin: 0; }
+
+    /* Section title */
+    .bk-section-title {
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        padding-bottom: .75rem;
+        border-bottom: 2px solid var(--gold-light);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    .bk-section-title i { color: var(--gold); }
+
+    /* Status badges */
+    .status-badge {
+        padding: .3rem .75rem;
+        border-radius: var(--r-pill);
+        font-size: .75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+    }
+    .status-badge i { font-size: .5rem; }
+    .status-new            { background: var(--status-confirm-bg);  color: var(--status-confirm-text); }
+    .status-pending        { background: var(--status-pending-bg);  color: var(--status-pending-text); }
+    .status-assigned       { background: var(--status-done-bg);     color: var(--status-done-text); }
+    .status-processing     { background: var(--status-confirm-bg);  color: var(--status-confirm-text); }
+    .status-waiting_customer { background: var(--warning-light);    color: var(--warning-text); }
+    .status-resolved       { background: var(--status-done-bg);     color: var(--status-done-text); }
+    .status-closed         { background: var(--bg-subtle);          color: var(--text-secondary); }
+
+    /* Info sidebar */
+    .info-item {
+        padding: .75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-label {
+        font-size: .7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        font-weight: 600;
+        margin-bottom: .2rem;
+    }
+    .info-value { font-size: .9rem; color: var(--text-primary); font-weight: 500; }
+
+    /* Content box */
+    .content-box {
+        background: var(--bg-subtle);
+        border-radius: var(--r-md);
+        padding: 1.1rem 1.25rem;
+        border-left: 3px solid var(--gold);
+    }
+    .content-label {
+        font-size: .7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        font-weight: 600;
+        margin-bottom: .5rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+    }
+    .content-label i { color: var(--gold); }
+    .content-text {
+        color: var(--text-primary);
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 0;
+        font-size: .9rem;
+    }
+
+    /* Replies */
+    .reply-item {
+        margin-bottom: .875rem;
+        background: var(--bg-subtle);
+        border-radius: var(--r-md);
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--border);
+    }
+    .reply-item.customer-reply {
+        background: var(--status-confirm-bg);
+        border-color: #bfdbfe;
+        border-left: 3px solid #3b82f6;
+    }
+    .reply-item.staff-reply {
+        background: var(--status-done-bg);
+        border-color: #bbf7d0;
+        border-left: 3px solid #10b981;
+    }
+    .reply-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: .6rem;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+    .reply-author { display: flex; align-items: center; gap: .5rem; }
+    .reply-author-name { font-weight: 700; color: var(--text-primary); font-size: .875rem; }
+    .reply-role-badge {
+        padding: .2rem .5rem;
+        border-radius: var(--r-pill);
+        font-size: .68rem;
+        font-weight: 600;
+    }
+    .reply-role-badge.customer { background: var(--status-confirm-bg); color: var(--status-confirm-text); }
+    .reply-role-badge.staff    { background: var(--status-done-bg);    color: var(--status-done-text); }
+    .reply-time { font-size: .75rem; color: var(--text-muted); white-space: nowrap; }
+    .reply-content { color: var(--text-primary); font-size: .875rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+
+    .empty-replies { text-align: center; padding: 2.5rem 1.5rem; color: var(--text-muted); }
+    .empty-replies i { font-size: 2.5rem; opacity: .35; margin-bottom: .75rem; }
+
+    /* Reply form */
+    .reply-form-box {
+        background: var(--gold-muted);
+        border: 1px solid var(--gold-border);
+        border-radius: var(--r-md);
+        padding: 1.25rem;
+    }
+    .reply-form-box .form-control {
+        border-radius: var(--r-md);
+        border: 1.5px solid var(--border);
+        padding: .65rem 1rem;
+        font-size: .9rem;
+        font-family: var(--font-ui);
+        transition: border-color .18s, box-shadow .18s;
+    }
+    .reply-form-box .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,169,110,.12);
+        outline: none;
+    }
+
+    /* Buttons */
+    .btn-cp-save {
+        padding: 9px 22px;
+        border-radius: var(--r-pill);
+        border: none;
+        background: var(--gold);
+        color: #fff;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: var(--font-ui);
+        transition: background .18s, box-shadow .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        text-decoration: none;
+    }
+    .btn-cp-save:hover { background: var(--gold-hover); color: #fff; box-shadow: var(--shadow-gold); }
+    .btn-cp-outline {
+        padding: 9px 20px;
+        border-radius: var(--r-pill);
+        border: 1.5px solid var(--gold);
+        background: transparent;
+        color: var(--gold-hover);
+        font-size: .82rem;
+        font-weight: 600;
+        font-family: var(--font-ui);
+        transition: background .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        text-decoration: none;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: .5rem;
+    }
+    .btn-cp-outline:last-child { margin-bottom: 0; }
+    .btn-cp-outline:hover { background: var(--gold-muted); color: var(--gold-hover); }
+
+    /* Alert */
+    .alert-success-ana {
+        background: var(--success-light);
+        border: 1px solid #86efac;
+        border-radius: var(--r-md);
+        padding: 1.1rem 1.25rem;
+        color: var(--success-text);
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        font-size: .9rem;
+    }
+    .alert-info-ana {
+        background: var(--status-confirm-bg);
+        border: 1px solid #93c5fd;
+        border-radius: var(--r-md);
+        padding: 1.1rem 1.25rem;
+        color: var(--status-confirm-text);
+        font-size: .9rem;
+    }
+
+    /* Sticky sidebar */
+    .sticky-sidebar { position: sticky; top: 1.5rem; }
+
+    @media (max-width: 991px) { .sticky-sidebar { position: static; } }
+    @media (max-width: 768px) {
+        .detail-card-header { padding: 1rem 1.25rem; }
+        .detail-card-body   { padding: 1.25rem; }
+        .reply-header { flex-direction: column; gap: .4rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1>Chi tiết khiếu nại</h1>
+        <p class="subtitle mb-0">{{ complaint.code }}</p>
+    </div>
+</section>
+
+<!-- Detail Section -->
+<section class="detail-section">
+    <div class="container">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Complaint Info Card -->
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h3 class="detail-card-title">{{ complaint.title }}</h3>
+                                <p class="detail-card-subtitle"><i class="far fa-clock me-1"></i>{{ complaint.created_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                            <span class="status-badge status-{{ complaint.status }}">
+                                <i class="fas fa-circle"></i>{{ complaint.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-card-body">
+                        <div class="content-box mb-3">
+                            <div class="content-label"><i class="fas fa-file-alt"></i>Nội dung khiếu nại</div>
+                            <div class="content-text">{{ complaint.content }}</div>
+                        </div>
+                        {% if complaint.expected_solution %}
+                        <div class="alert-info-ana">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            <strong>Giải pháp mong muốn:</strong> {{ complaint.expected_solution }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Replies -->
+                <div class="detail-card">
+                    <div class="detail-card-body">
+                        <div class="bk-section-title"><i class="fas fa-comments"></i>Lịch sử phản hồi</div>
+                        {% if replies %}
+                        <div class="replies-list">
+                            {% for reply in replies %}
+                            <div class="reply-item {% if reply.sender_role == 'CUSTOMER' %}customer-reply{% else %}staff-reply{% endif %}">
+                                <div class="reply-header">
+                                    <div class="reply-author">
+                                        {% if reply.sender_role == 'CUSTOMER' %}
+                                        <strong class="reply-author-name">{{ reply.sender_name }}</strong>
+                                        <span class="reply-role-badge customer">Bạn</span>
+                                        {% else %}
+                                        <strong class="reply-author-name">Spa ANA</strong>
+                                        <span class="reply-role-badge staff">Hỗ trợ viên</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="reply-time"><i class="far fa-clock me-1"></i>{{ reply.created_at|date:"d/m/Y H:i" }}</span>
+                                </div>
+                                <div class="reply-content">{{ reply.message }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-replies">
+                            <i class="fas fa-comments d-block"></i>
+                            <p class="mb-0">Chưa có phản hồi nào</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Reply Form -->
+                {% if complaint.status != 'RESOLVED' %}
+                <div class="detail-card">
+                    <div class="detail-card-body">
+                        <div class="bk-section-title"><i class="fas fa-reply"></i>Gửi phản hồi bổ sung</div>
+                        <div class="reply-form-box">
+                            <form method="post" action="{% url 'complaints:customer_complaint_reply' complaint.id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <textarea name="message" class="form-control" rows="4"
+                                              placeholder="Nhập nội dung phản hồi của bạn..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn-cp-save">
+                                    <i class="fas fa-paper-plane"></i>Gửi phản hồi
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert-success-ana">
+                    <i class="fas fa-check-circle" style="flex-shrink:0;margin-top:.1rem"></i>
+                    <div><strong>Đã giải quyết!</strong><p class="mb-0 mt-1" style="font-size:.875rem">Khiếu nại này đã được giải quyết. Cảm ơn bạn đã phản hồi!</p></div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="sticky-sidebar">
+                    <!-- Info Card -->
+                    <div class="detail-card">
+                        <div class="detail-card-body">
+                            <div class="bk-section-title"><i class="fas fa-info-circle"></i>Thông tin</div>
+                            <div class="info-item">
+                                <div class="info-label">Mã khiếu nại</div>
+                                <div class="info-value">{{ complaint.code }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Trạng thái</div>
+                                <div class="info-value">
+                                    <span class="status-badge status-{{ complaint.status }}">
+                                        <i class="fas fa-circle"></i>{{ complaint.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Ngày tạo</div>
+                                <div class="info-value"><i class="far fa-calendar me-1"></i>{{ complaint.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Cập nhật lần cuối</div>
+                                <div class="info-value"><i class="far fa-edit me-1"></i>{{ complaint.updated_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            {% if complaint.assigned_to %}
+                            <div class="info-item">
+                                <div class="info-label">Người xử lý</div>
+                                <div class="info-value"><i class="fas fa-user-check me-1"></i>Nhân viên hỗ trợ</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if complaint.resolution %}
+                    <div class="detail-card">
+                        <div class="detail-card-body">
+                            <div class="bk-section-title"><i class="fas fa-check-double"></i>Kết quả xử lý</div>
+                            <div class="content-box">
+                                <div class="content-text">{{ complaint.resolution }}</div>
+                                {% if complaint.resolved_at %}
+                                <small class="text-muted mt-2 d-block"><i class="far fa-clock me-1"></i>Hoàn thành: {{ complaint.resolved_at|date:"d/m/Y H:i" }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Quick Support -->
+                    <div class="detail-card">
+                        <div class="detail-card-body">
+                            <div class="bk-section-title"><i class="fas fa-headset"></i>Hỗ trợ nhanh</div>
+                            <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:1rem">Bạn cần hỗ trợ gấp? Liên hệ ngay!</p>
+                            <a href="tel:1900xxxx" class="btn-cp-outline"><i class="fas fa-phone"></i>Hotline: 1900 xxxx</a>
+                            <a href="https://zalo.me" target="_blank" class="btn-cp-outline"><i class="fas fa-comment-dots"></i>Chat Zalo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

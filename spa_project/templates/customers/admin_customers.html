@@ -1,0 +1,420 @@
+{% extends "manage/base.html" %}
+
+{% load static %}
+
+{% block title %}Quản lý Khách hàng - Spa ANA{% endblock %}
+
+{% block page_title %}Quản lý Khách hàng{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-box { position: relative; max-width: 400px; }
+.search-box input { padding-left: 2.5rem; border-radius: 25px; border: 2px solid #e9ecef; }
+.search-box input:focus { border-color: #d4a853; box-shadow: 0 0 0 3px rgba(212, 168, 53, 0.1); }
+.search-box i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #adb5bd; }
+.customer-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.customer-table .table thead th { background: #1e3a5f; color: white; border: none; padding: 1rem; font-weight: 600; }
+.customer-table .table tbody tr:hover { background: #f8f9fa; }
+.action-btn { padding: 0.25rem 0.5rem; border-radius: 8px; border: none; cursor: pointer; margin: 0 0.25rem; }
+.action-btn.view { background: #e3f2fd; color: #1976d2; }
+.action-btn.edit { background: #fff3e0; color: #f57c00; }
+.action-btn:hover { transform: scale(1.1); }
+.drawer { position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: white; box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2); z-index: 1050; transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; }
+.drawer.show { transform: translateX(0); }
+.drawer-header { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+.drawer-content { padding: 1.5rem; }
+.detail-section { margin-bottom: 2rem; }
+.detail-section h6 { color: #1e3a5f; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #d4a853; }
+.detail-item { display: flex; margin-bottom: 0.75rem; }
+.detail-label { min-width: 120px; font-weight: 600; color: #6c757d; }
+.detail-value { color: #1e3a5f; }
+.note-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 1rem; margin-top: 1rem; }
+.modal-header.spa-header { background: #2f4b6e !important; color: #fff; border-bottom: none;}
+.contact-badge{display:inline-block;padding:6px 12px;border-radius:20px;font-weight:500;font-size:13px;color:#fff}
+.contact-badge.zalo{background:#0084ff}
+.contact-badge.facebook{background:#1877f2}
+.contact-badge.dien-thoai{background:#28a745}
+.contact-badge.khac{background:#6c757d}
+.contact-badge.mac-dinh{background:#17a2b8}
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div class="mb-3">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <form method="GET" action="{% url 'customers:admin_customers' %}" class="search-box m-0 w-100" id="searchFilterForm">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" name="search" id="searchInput" placeholder="Tìm kiếm theo tên hoặc số điện thoại..." value="{{ search_query }}">
+                    <button type="submit" class="d-none"></button>
+                </form>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                    <i class="fas fa-plus me-2"></i>Thêm khách hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="customer-table">
+    <div class="table-responsive">
+        <table class="table table-hover" id="customerTable">
+            <thead>
+                <tr>
+                    <th>Mã KH</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Kênh liên hệ</th>
+                    <th>Tổng lịch hẹn</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                {% for c in customers %}
+                <tr>
+                    <td><strong>KH{{ c.id|stringformat:"03d" }}</strong></td>
+                    <td>{{ c.full_name }}</td>
+                    <td>{{ c.phone }}</td>
+                    <td>
+                        {% if c.contact_channel %}
+                            <span class="contact-badge
+                                {% if c.contact_channel == 'Zalo' %}zalo
+                                {% elif c.contact_channel == 'Facebook' %}facebook
+                                {% elif c.contact_channel == 'Điện thoại' %}dien-thoai
+                                {% elif c.contact_channel == 'Khác' %}khac
+                                {% else %}mac-dinh
+                                {% endif %}">
+                                {{ c.contact_channel }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">Chưa cập nhật</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.appt_count }}</td>
+                    <td>
+                        <button class="action-btn view"
+                            onclick="viewCustomer(
+                                '{{ c.id }}',
+                                '{{ c.full_name|escapejs }}',
+                                '{{ c.phone|escapejs }}',
+                                '{% if c.dob %}{{ c.dob|date:"Y-m-d" }}{% endif %}',
+                                '{{ c.contact_channel|default:""|escapejs }}',
+                                '{{ c.notes|default:""|escapejs }}',
+                                '{{ c.appt_count }}',
+                                '{{ c.created_at|date:"Y-m-d" }}',
+                                '{{ c.gender|default:""|escapejs }}',
+                                '{{ c.address|default:""|escapejs }}'
+                            )"
+                            title="Xem">
+                            <i class="fas fa-eye"></i>
+                        </button>
+
+                        <button class="action-btn edit"
+                            onclick='editCustomer(
+                                "{{ c.id }}",
+                                "{{ c.full_name|escapejs }}",
+                                "{{ c.phone|escapejs }}",
+                                "{% if c.dob %}{{ c.dob|date:'Y-m-d' }}{% endif %}",
+                                "{{ c.contact_channel|default:''|escapejs }}",
+                                "{{ c.notes|default:''|escapejs }}",
+                                "{{ c.gender|default:''|escapejs }}",
+                                "{{ c.address|default:''|escapejs }}"
+                            )'
+                            title="Sửa">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">Chưa có khách hàng nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if customers.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if customers.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Trước</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
+        {% endif %}
+
+        {% for num in customers.paginator.page_range %}
+            {% if customers.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if customers.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Sau</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><a class="page-link" href="#">Sau</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header spa-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Thêm khách hàng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm" method="post" action="{% url 'customers:admin_customers' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><span class="text-danger">*</span> Họ tên</label>
+                            <input type="text" class="form-control" id="addName" name="full_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><span class="text-danger">*</span> Số điện thoại</label>
+                            <input type="text" class="form-control" id="addPhone" name="phone"
+                               required maxlength="10" pattern="^0\d{9}$"
+                               title="Số điện thoại không hợp lệ">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" class="form-control" id="addDob" name="dob">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kênh liên hệ</label>
+                            <select class="form-select" id="addChannel" name="contact_channel">
+                                <option value="Zalo">Zalo</option>
+                                <option value="Điện thoại">Điện thoại</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giới tính</label>
+                            <select class="form-select" name="gender">
+                                <option value="">-- Chọn --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nu">Nữ</option>
+                                <option value="Khac">Khác</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" name="address">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="addNotes" name="notes" rows="2"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header spa-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Cập nhật thông tin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomerForm" method="post" action="{% url 'customers:admin_customers' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" id="editCustomerId" name="customer_id">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><span class="text-danger">*</span> Họ tên</label>
+                            <input type="text" class="form-control" id="editName" name="full_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><span class="text-danger">*</span> Số điện thoại</label>
+                            <input type="text" class="form-control" id="editPhone" name="phone"
+                               required maxlength="10" pattern="^0\d{9}$"
+                               title="Số điện thoại không hợp lệ">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" class="form-control" id="editDob" name="dob">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kênh liên hệ</label>
+                            <select class="form-select" id="editChannel" name="contact_channel">
+                                <option value="Zalo">Zalo</option>
+                                <option value="Điện thoại">Điện thoại</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giới tính</label>
+                            <select class="form-select" id="editGender" name="gender">
+                                <option value="Nam">Nam</option>
+                                <option value="Nu">Nữ</option>
+                                <option value="Khac">Khác</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" id="editAddress" name="address">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="editNotes" name="notes" rows="2"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Cập nhật
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Detail Drawer -->
+<div class="drawer" id="customerDrawer">
+    <div class="drawer-header">
+        <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Chi tiết khách hàng</h5>
+        <button class="btn btn-sm btn-light" onclick="closeDrawer()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="drawer-content" id="drawerContent"></div>
+</div>
+
+<div id="drawerOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1040; display: none;" onclick="closeDrawer()"></div>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="toast" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">Thông báo</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+
+function editCustomer(id, name, phone, dob, channel, notes, gender, address) {
+    closeDrawer();
+
+    document.getElementById('editCustomerId').value = id;
+    document.getElementById('editName').value = name || '';
+    document.getElementById('editPhone').value = phone || '';
+    document.getElementById('editDob').value = dob || '';
+    document.getElementById('editChannel').value = channel || 'Zalo';
+    document.getElementById('editNotes').value = notes || '';
+
+    document.getElementById('editGender').value = gender || '';
+    document.getElementById('editAddress').value = address || '';
+
+    new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+}
+
+function viewCustomer(id, name, phone, dob, channel, notes, totalAppointments, createdAt, gender, address) {
+    document.getElementById('drawerContent').innerHTML = `
+        <div class="detail-section">
+            <h6><i class="fas fa-user me-2"></i>Thông tin cá nhân</h6>
+
+            <div class="detail-item"><span class="detail-label">Mã KH:</span><span class="detail-value"><strong>KH${String(id).padStart(3, '0')}</strong></span></div>
+            <div class="detail-item"><span class="detail-label">Họ tên:</span><span class="detail-value">${name}</span></div>
+            <div class="detail-item"><span class="detail-label">SĐT:</span><span class="detail-value">${phone}</span></div>
+            <div class="detail-item"><span class="detail-label">Giới tính:</span><span class="detail-value">${gender === 'Nam' ? 'Nam' : gender === 'Nu' ? 'Nữ' : gender === 'Khac' ? 'Khác' : 'Chưa cập nhật'}</span></div>
+            <div class="detail-item"><span class="detail-label">Ngày sinh:</span><span class="detail-value">${dob || 'Chưa cập nhật'}</span></div>
+            <div class="detail-item"><span class="detail-label">Địa chỉ:</span><span class="detail-value">${address || 'Chưa cập nhật'}</span></div>
+            <div class="detail-item"><span class="detail-label">Kênh LH:</span><span class="detail-value">${channel || 'Chưa cập nhật'}</span></div>
+            <div class="detail-item"><span class="detail-label">Ngày tạo:</span><span class="detail-value">${createdAt}</span></div>
+        </div>
+
+        <div class="detail-section">
+            <h6><i class="fas fa-sticky-note me-2"></i>Ghi chú</h6>
+            ${notes ? `<div class="note-box" style="background:#f8f9fa;border-color:#ced4da;">${notes}</div>` : ''}
+        </div>
+
+        <div class="detail-section">
+            <h6><i class="fas fa-calendar-check me-2"></i>Thống kê</h6>
+            <div class="detail-item"><span class="detail-label">Tổng lịch hẹn:</span><span class="detail-value badge bg-warning">${totalAppointments}</span></div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button class="btn btn-warning"
+                onclick="editCustomer('${id}', '${name}', '${phone}', '${dob}', '${channel}', '${notes}', '${gender}', '${address}')">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </button>
+        </div>
+    `;
+
+    document.getElementById('drawerOverlay').style.display = 'block';
+    document.getElementById('customerDrawer').classList.add('show');
+}
+
+function closeDrawer() {
+    document.getElementById('drawerOverlay').style.display = 'none';
+    document.getElementById('customerDrawer').classList.remove('show');
+}
+</script>
+{% endblock %}

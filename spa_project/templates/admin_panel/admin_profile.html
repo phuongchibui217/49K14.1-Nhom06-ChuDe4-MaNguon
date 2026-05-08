@@ -1,0 +1,589 @@
+{% extends "manage/base.html" %}
+{% load static %}
+
+{% block title %}Tài khoản cá nhân - Spa ANA{% endblock %}
+{% block page_title %}Tài khoản cá nhân{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── WRAPPER ────────────────────────────────────────── */
+.ap-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+/* ── PROFILE HEADER CARD ────────────────────────────── */
+.ap-header {
+  background: var(--bg-white);
+  border-radius: 18px;
+  border: 1px solid rgba(201,169,110,.22);
+  box-shadow: 0 2px 16px rgba(30,58,95,.07);
+  padding: 1.4rem 1.75rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+.ap-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(201,169,110,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.ap-avatar {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+  border: 2px solid rgba(201,169,110,.45);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700;
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  box-shadow: 0 2px 10px rgba(30,58,95,.18);
+}
+.ap-header-info { flex: 1; min-width: 0; }
+.ap-header-name {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: .25rem;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+}
+.ap-header-meta {
+  font-size: .8rem; color: var(--text-secondary);
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-bottom: .4rem;
+}
+.ap-header-meta span { display: flex; align-items: center; gap: 4px; }
+.ap-role-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(201,169,110,.1);
+  border: 1px solid rgba(201,169,110,.35);
+  color: var(--gold-hover);
+  padding: .18rem .65rem;
+  border-radius: var(--r-pill);
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+}
+
+/* ── SECTION CARD ───────────────────────────────────── */
+.ap-card {
+  background: var(--bg-white);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 8px rgba(30,58,95,.05);
+  margin-bottom: 1.1rem;
+  overflow: hidden;
+}
+.ap-card-header {
+  padding: .85rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(248,249,252,.6);
+}
+.ap-card-title {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-secondary);
+  margin: 0;
+  display: flex; align-items: center; gap: .45rem;
+}
+.ap-card-title i { color: var(--gold); font-size: .75rem; }
+.ap-card-body { padding: 1.1rem 1.4rem; }
+
+/* ── INFO GRID (view mode) ──────────────────────────── */
+.ap-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  align-items: start;
+}
+.profile-item {
+  padding: 9px 12px;
+  background: rgba(248,249,252,.7);
+  border: 1px solid rgba(0,0,0,.045);
+  border-radius: 10px;
+  transition: border-color .15s;
+  align-self: start;
+}
+.profile-item:hover { border-color: rgba(201,169,110,.25); }
+.profile-item .label {
+  font-size: .7rem;
+  color: #999;
+  font-weight: 600;
+  margin-bottom: 3px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.profile-item .value {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+.profile-item .value.empty {
+  color: #bbb;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ── STATUS / ROLE INLINE BADGES ────────────────────── */
+.ap-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: .2rem .6rem;
+  border-radius: var(--r-pill);
+  font-size: .72rem; font-weight: 600;
+}
+.ap-badge-active  { background: var(--status-done-bg);    color: var(--status-done-text); }
+.ap-badge-locked  { background: var(--status-cancel-bg);  color: var(--status-cancel-text); }
+.ap-badge-super   { background: var(--gold);        color: #fff; border: 1px solid var(--gold); }
+.ap-badge-staff   { background: var(--bg-subtle);         color: var(--text-secondary); }
+
+/* ── FORM GRID (edit mode) ──────────────────────────── */
+.ap-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+.ap-form-full { grid-column: 1 / -1; }
+
+.ap-label {
+  display: block;
+  font-size: .68rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.ap-input, .ap-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: .875rem;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--bg-white);
+  transition: border-color .18s, box-shadow .18s;
+  outline: none;
+  appearance: none;
+}
+.ap-input:focus, .ap-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,169,110,.12);
+}
+.ap-input:disabled {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.ap-field-err {
+  font-size: .72rem;
+  color: var(--danger);
+  margin-top: 4px;
+  display: none;
+}
+.ap-field-err.show { display: flex; align-items: center; gap: 4px; }
+
+/* ── FORM ACTIONS ───────────────────────────────────── */
+.ap-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── BUTTONS ────────────────────────────────────────── */
+.btn-ap-edit {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: var(--gold-hover);
+  font-size: .75rem; font-weight: 600;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: background .18s, color .18s;
+  line-height: 1;
+}
+.btn-ap-edit:hover { background: rgba(201,169,110,.12); }
+.btn-ap-edit i { font-size: .65rem; }
+
+.btn-ap-cancel {
+  padding: 6px 16px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: .75rem; font-weight: 600;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: border-color .18s, color .18s;
+}
+.btn-ap-cancel:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+.btn-ap-save {
+  padding: 6px 20px;
+  border-radius: var(--r-pill);
+  border: none;
+  background: var(--gold);
+  color: #fff;
+  font-size: .75rem; font-weight: 700;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: background .18s, box-shadow .18s;
+}
+.btn-ap-save:hover { background: var(--gold-hover); box-shadow: var(--shadow-gold); }
+
+/* ── PASSWORD SECTION ───────────────────────────────── */
+.ap-pw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+.ap-pw-full { grid-column: 1 / -1; max-width: 560px; }
+.ap-pw-wrap { position: relative; }
+.ap-pw-wrap .ap-input { padding-right: 42px; }
+.ap-pw-toggle {
+  position: absolute; right: 11px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; padding: 0;
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center;
+  transition: color .18s;
+}
+.ap-pw-toggle:hover { color: var(--text-primary); }
+.ap-pw-toggle svg { width: 16px; height: 16px; display: block; }
+
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ap-header { flex-direction: column; text-align: center; }
+  .ap-header-meta { justify-content: center; }
+  .ap-info-grid,
+  .ap-form-grid,
+  .ap-pw-grid { grid-template-columns: 1fr; }
+  .ap-form-full,
+  .ap-pw-full { grid-column: auto; max-width: 100%; }
+  .ap-actions { flex-direction: column-reverse; }
+  .btn-ap-cancel, .btn-ap-save { width: 100%; text-align: center; justify-content: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ap-wrap">
+
+{% if messages %}{% for msg in messages %}
+<div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible fade show mb-3" role="alert">
+  {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}{% endif %}
+
+{% if profile_error %}
+<div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+  {{ profile_error }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Profile Header -->
+<div class="ap-header">
+  <div class="ap-avatar">
+    {{ staff_profile.full_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+  </div>
+  <div class="ap-header-info">
+    <div class="ap-header-name">{{ staff_profile.full_name|default:user.get_full_name|default:user.username }}</div>
+    <div class="ap-header-meta">
+      {% if user.email %}<span><i class="fas fa-envelope"></i>{{ user.email }}</span>{% endif %}
+      {% if staff_profile.phone %}<span><i class="fas fa-phone"></i>{{ staff_profile.phone }}</span>{% endif %}
+    </div>
+    <span class="ap-role-badge">
+      <i class="fas fa-shield-alt"></i>
+      {% if user.is_superuser %}Super Admin{% elif user.is_staff %}Quản trị viên{% else %}Nhân viên{% endif %}
+    </span>
+  </div>
+</div>
+
+<!-- Ho so ca nhan (gop Thong tin tai khoan + Thong tin ca nhan) -->
+<div class="ap-card">
+  <div class="ap-card-header">
+    <h5 class="ap-card-title"><i class="fas fa-user-circle"></i>Thông tin cá nhân</h5>
+    <button class="btn-ap-edit" id="btnEditProfile" onclick="toggleEdit()">
+      <i class="fas fa-pen"></i>Chỉnh sửa thông tin
+    </button>
+  </div>
+  <div class="ap-card-body">
+
+    <!-- View mode -->
+    <div id="viewMode">
+      <div class="ap-info-grid">
+        <div class="profile-item">
+          <div class="label">Tên đăng nhập</div>
+          <div class="value">{{ user.username }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Họ và tên</div>
+          {% with full_name=staff_profile.full_name|default:user.get_full_name %}
+          <div class="value {% if not full_name %}empty{% endif %}">
+            {{ full_name|default:"Chưa cập nhật" }}
+          </div>
+          {% endwith %}
+        </div>
+        <div class="profile-item">
+          <div class="label">Email</div>
+          <div class="value {% if not user.email %}empty{% endif %}">{{ user.email|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Số điện thoại</div>
+          <div class="value {% if not staff_profile.phone %}empty{% endif %}">{{ staff_profile.phone|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Vai trò</div>
+          <div class="value">
+            {% if user.is_superuser %}
+              <span class="ap-badge ap-badge-super"><i class="fas fa-crown" style="font-size:.55rem"></i>Super Administrator</span>
+            {% elif user.is_staff %}
+              <span class="ap-badge ap-badge-staff">Quản trị viên</span>
+            {% else %}
+              <span class="ap-badge ap-badge-staff">Nhân viên</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Trạng thái</div>
+          <div class="value">
+            {% if user.is_active %}
+              <span class="ap-badge ap-badge-active"><i class="fas fa-circle" style="font-size:.4rem"></i>Hoạt động</span>
+            {% else %}
+              <span class="ap-badge ap-badge-locked"><i class="fas fa-circle" style="font-size:.4rem"></i>Đã khóa</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Giới tính</div>
+          <div class="value {% if not staff_profile.gender %}empty{% endif %}">
+            {{ staff_profile.get_gender_display|default:"Chưa cập nhật" }}
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Ngày sinh</div>
+          <div class="value {% if not staff_profile.dob %}empty{% endif %}">
+            {{ staff_profile.dob|date:"d/m/Y"|default:"Chưa cập nhật" }}
+          </div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Ngày tham gia</div>
+          <div class="value">{{ user.date_joined|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Đăng nhập gần nhất</div>
+          <div class="value {% if not user.last_login %}empty{% endif %}">
+            {{ user.last_login|date:"d/m/Y H:i"|default:"Chưa có dữ liệu" }}
+          </div>
+        </div>
+        <div class="profile-item" style="grid-column:1/-1">
+          <div class="label">Địa chỉ</div>
+          <div class="value {% if not staff_profile.address %}empty{% endif %}">
+            {{ staff_profile.address|default:"Chưa cập nhật" }}
+          </div>
+        </div>
+        {% if staff_profile.notes %}
+        <div class="profile-item" style="grid-column:1/-1">
+          <div class="label">Ghi chú</div>
+          <div class="value">{{ staff_profile.notes }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Edit mode (gop ca 2 form) -->
+    <form id="editMode" method="post" action="{% url 'admin_panel:admin_profile' %}" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_profile">
+      <div class="ap-form-grid">
+        <div>
+          <label class="ap-label">Tên đăng nhập <span style="color:var(--danger)">*</span></label>
+          <input class="ap-input" type="text" id="editUsername" name="username" value="{{ user.username }}">
+          <div class="ap-field-err" id="errUsername"><i class="fas fa-exclamation-circle"></i>Tên đăng nhập không hợp lệ</div>
+          {% if username_error %}<div style="font-size:.75rem;color:var(--danger);margin-top:4px"><i class="fas fa-exclamation-circle"></i> {{ username_error }}</div>{% endif %}
+        </div>
+        <div>
+          <label class="ap-label">Họ và tên <span style="color:var(--danger)">*</span></label>
+          <input class="ap-input" type="text" id="editFullName" name="full_name"
+                 value="{{ staff_profile.full_name|default:user.get_full_name }}" required>
+          <div class="ap-field-err" id="errFullName"><i class="fas fa-exclamation-circle"></i>Vui lòng nhập họ tên</div>
+        </div>
+        <div>
+          <label class="ap-label">Email</label>
+          <input class="ap-input" type="email" id="editEmail" name="email" value="{{ user.email }}">
+          <div class="ap-field-err" id="errEmail"><i class="fas fa-exclamation-circle"></i>Email không hợp lệ</div>
+        </div>
+        <div>
+          <label class="ap-label">Số điện thoại</label>
+          <input class="ap-input" type="text" id="editPhone" name="phone" value="{{ staff_profile.phone|default:'' }}">
+        </div>
+        <div>
+          <label class="ap-label">Giới tính</label>
+          <select class="ap-select" name="gender">
+            <option value="">— Chọn —</option>
+            <option value="Nam"  {% if staff_profile.gender == "Nam"  %}selected{% endif %}>Nam</option>
+            <option value="Nu"   {% if staff_profile.gender == "Nu"   %}selected{% endif %}>Nữ</option>
+            <option value="Khac" {% if staff_profile.gender == "Khac" %}selected{% endif %}>Khác</option>
+          </select>
+        </div>
+        <div>
+          <label class="ap-label">Ngày sinh</label>
+          <input class="ap-input" type="date" name="dob" value="{{ staff_profile.dob|date:'Y-m-d'|default:'' }}">
+        </div>
+        <div class="ap-form-full">
+          <label class="ap-label">Địa chỉ</label>
+          <input class="ap-input" type="text" name="address" value="{{ staff_profile.address|default:'' }}">
+        </div>
+      </div>
+      <div class="ap-actions">
+        <button type="button" class="btn-ap-cancel" onclick="cancelEdit()"><i class="fas fa-times me-1"></i>Hủy</button>
+        <button type="submit" class="btn-ap-save" onclick="return validateProfile()"><i class="fas fa-check me-1"></i>Lưu</button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- Bao mat -->
+<div class="ap-card">
+  <div class="ap-card-header">
+    <h5 class="ap-card-title"><i class="fas fa-lock"></i>Bảo mật</h5>
+  </div>
+  <div class="ap-card-body">
+
+    {% if pw_error %}
+    <div class="alert alert-danger border-0 rounded-3 mb-3" style="font-size:.82rem">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ pw_error }}
+    </div>
+    {% endif %}
+    {% if pw_success %}
+    <div class="alert alert-success border-0 rounded-3 mb-3" style="font-size:.82rem">
+      <i class="fas fa-check-circle me-2"></i>{{ pw_success }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'admin_panel:admin_profile' %}" onsubmit="return validatePassword()">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_password">
+      <div class="ap-pw-grid">
+
+        <div class="ap-pw-full">
+          <label class="ap-label">Mật khẩu hiện tại <span style="color:var(--danger)">*</span></label>
+          <div class="ap-pw-wrap">
+            <input class="ap-input" type="password" id="currentPassword" name="current_password" required>
+            <button class="ap-pw-toggle" type="button" onclick="apTogglePw('currentPassword', this)">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          <div class="ap-field-err" id="errCurrentPw"><i class="fas fa-exclamation-circle"></i>Vui lòng nhập mật khẩu hiện tại</div>
+        </div>
+
+        <div>
+          <label class="ap-label">Mật khẩu mới <span style="color:var(--danger)">*</span></label>
+          <div class="ap-pw-wrap">
+            <input class="ap-input" type="password" id="newPassword" name="new_password" required>
+            <button class="ap-pw-toggle" type="button" onclick="apTogglePw('newPassword', this)">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          <div class="ap-field-err" id="errNewPw"><i class="fas fa-exclamation-circle"></i>Mật khẩu phải có ít nhất 6 ký tự</div>
+        </div>
+
+        <div>
+          <label class="ap-label">Xác nhận mật khẩu mới <span style="color:var(--danger)">*</span></label>
+          <div class="ap-pw-wrap">
+            <input class="ap-input" type="password" id="confirmPassword" name="confirm_password" required>
+            <button class="ap-pw-toggle" type="button" onclick="apTogglePw('confirmPassword', this)">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          <div class="ap-field-err" id="errConfirmPw"><i class="fas fa-exclamation-circle"></i>Mật khẩu xác nhận không khớp</div>
+        </div>
+
+      </div>
+      <div class="ap-actions">
+        <button type="submit" class="btn-ap-save"><i class="fas fa-key me-1"></i>Đổi mật khẩu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div>{# /ap-wrap #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const origAccount = {
+  username: '{{ user.username|escapejs }}',
+  fullName: '{{ staff_profile.full_name|default:user.get_full_name|escapejs }}',
+  email:    '{{ user.email|escapejs }}',
+  phone:    '{{ staff_profile.phone|default:""|escapejs }}',
+  gender:   '{{ staff_profile.gender|default:""|escapejs }}',
+  dob:      '{{ staff_profile.dob|date:"Y-m-d"|default:""|escapejs }}',
+  address:  '{{ staff_profile.address|default:""|escapejs }}'
+};
+
+function toggleEdit() {
+  document.getElementById('viewMode').style.display = 'none';
+  document.getElementById('editMode').style.display = 'block';
+  document.getElementById('btnEditProfile').style.display = 'none';
+}
+function cancelEdit() {
+  document.getElementById('editUsername').value  = origAccount.username;
+  document.getElementById('editFullName').value  = origAccount.fullName;
+  document.getElementById('editEmail').value     = origAccount.email;
+  document.getElementById('editPhone').value     = origAccount.phone;
+  document.querySelector('#editMode select[name="gender"]').value = origAccount.gender;
+  document.querySelector('#editMode input[name="dob"]').value     = origAccount.dob;
+  document.querySelector('#editMode input[name="address"]').value = origAccount.address;
+  document.querySelectorAll('#editMode .ap-field-err').forEach(e => e.classList.remove('show'));
+  document.getElementById('viewMode').style.display = 'block';
+  document.getElementById('editMode').style.display = 'none';
+  document.getElementById('btnEditProfile').style.display = 'inline-flex';
+}
+function validateProfile() {
+  const fn = document.getElementById('editFullName').value.trim();
+  const em = document.getElementById('editEmail').value.trim();
+  let ok = true;
+  if (!fn) { showErr('errFullName', 'Vui lòng nhập họ tên'); ok = false; } else hideErr('errFullName');
+  if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { showErr('errEmail', 'Email không hợp lệ'); ok = false; } else hideErr('errEmail');
+  return ok;
+}
+
+function validatePassword() {
+  const cur = document.getElementById('currentPassword').value;
+  const nw  = document.getElementById('newPassword').value;
+  const cf  = document.getElementById('confirmPassword').value;
+  let ok = true;
+  if (!cur)               { showErr('errCurrentPw', 'Vui lòng nhập mật khẩu hiện tại'); ok = false; } else hideErr('errCurrentPw');
+  if (!nw || nw.length < 6) { showErr('errNewPw', 'Mật khẩu phải có ít nhất 6 ký tự'); ok = false; }  else hideErr('errNewPw');
+  if (nw !== cf)          { showErr('errConfirmPw', 'Mật khẩu xác nhận không khớp'); ok = false; }    else hideErr('errConfirmPw');
+  return ok;
+}
+
+function apTogglePw(inputId, btn) {
+  const inp  = document.getElementById(inputId);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('.icon-eye').style.display     = show ? 'none' : '';
+  btn.querySelector('.icon-eye-off').style.display = show ? ''     : 'none';
+}
+
+function showErr(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.classList.add('show'); }
+function hideErr(id)      { document.getElementById(id).classList.remove('show'); }
+</script>
+{% endblock %}

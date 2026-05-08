@@ -1,0 +1,711 @@
+{% extends "manage/base.html" %}
+{% load static %}
+{% load spa_filters %}
+
+{% block title %}Quản lý Dịch vụ - Spa ANA{% endblock %}
+
+{% block page_title %}Quản lý Dịch vụ{% endblock %}
+
+{% block header_extra %}
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+    <i class="fas fa-plus me-2"></i>
+    Thêm dịch vụ mới
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-services.css' %}">
+<style>
+/* ── Variant rows ── */
+.variant-row {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 6px;
+}
+.variant-row .variant-label-row {
+    margin-bottom: 6px;
+}
+.variant-row .variant-label-row label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+    display: block;
+}
+.variant-row .variant-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 6px;
+    align-items: end;
+}
+.variant-row .variant-bottom-row .sub-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+    display: block;
+}
+.variant-row input { font-size: 0.875rem; min-width: 0; }
+.variant-row .btn-remove-variant {
+    color: #dc3545;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s;
+    margin-bottom: 1px;
+}
+.variant-row .btn-remove-variant:hover { background: #fee2e2; }
+.variant-header { display: none; }
+
+/* ── Form section blocks ── */
+.form-section {
+    background: #f8fafc;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem 1.1rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.form-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 0.65rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.form-section-title i { color: #d4a853; font-size: 0.75rem; }
+
+/* ── Description fields ── */
+.desc-field-wrap { position: relative; }
+.desc-counter {
+    position: absolute;
+    bottom: 6px;
+    right: 10px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    pointer-events: none;
+    background: rgba(255,255,255,0.85);
+    padding: 0 3px;
+    border-radius: 4px;
+}
+.desc-counter.warn { color: #f59e0b; }
+.desc-counter.over  { color: #ef4444; }
+
+.field-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+.field-hint i { color: #d4a853; margin-top: 1px; flex-shrink: 0; }
+.field-hint.auto-note { color: #0ea5e9; }
+.field-hint.auto-note i { color: #0ea5e9; }
+
+/* ── Divider between columns ── */
+.col-divider {
+    border-left: 1px solid #e9ecef;
+}
+@media (max-width: 767px) { .col-divider { border-left: none; border-top: 1px solid #e9ecef; padding-top: 1rem; } }
+
+/* ══════════════════════════════════════════
+   DELETE SERVICE MODAL — Luxury Spa Style
+══════════════════════════════════════════ */
+
+/* Overlay blur */
+#deleteServiceModal.modal {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+#deleteServiceModal .modal-backdrop,
+#deleteServiceModal ~ .modal-backdrop {
+    backdrop-filter: blur(3px);
+}
+
+.delete-modal-dialog {
+    max-width: 400px;
+}
+
+.delete-modal-content {
+    position: relative;
+    background: #fff;
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(30, 20, 10, 0.18), 0 4px 16px rgba(0,0,0,0.08);
+    overflow: visible;
+    animation: deleteModalIn 0.25s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+}
+
+@keyframes deleteModalIn {
+    from { opacity: 0; transform: scale(0.88) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Close button */
+.delete-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #f1f0ee;
+    color: #9a8f85;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, transform 0.18s;
+    z-index: 10;
+    line-height: 1;
+}
+.delete-modal-close:hover {
+    background: #e8e4e0;
+    color: #5a4a3a;
+    transform: rotate(90deg);
+}
+
+/* Body */
+.delete-modal-body {
+    padding: 2.5rem 2rem 1.5rem;
+    text-align: center;
+}
+
+/* Icon circle */
+.delete-modal-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #fdf0f0;
+    border: 1.5px solid #f5d0d0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+}
+.delete-modal-icon i {
+    font-size: 1.2rem;
+    color: #b84040;
+}
+
+/* Title */
+.delete-modal-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b0a090;
+    margin-bottom: 0.85rem;
+}
+
+/* Main question */
+.delete-modal-question {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1e2a38;
+    margin-bottom: 0.4rem;
+    line-height: 1.45;
+}
+
+/* Hint */
+.delete-modal-hint {
+    font-size: 0.85rem;
+    color: #a09080;
+    margin-bottom: 0;
+    letter-spacing: 0.01em;
+}
+
+/* Footer */
+.delete-modal-footer {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0 2rem 2rem;
+    justify-content: center;
+}
+
+/* Cancel button */
+.delete-btn-cancel {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: 1.5px solid #e0d8d0;
+    background: #faf9f7;
+    color: #6b5e52;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+    letter-spacing: 0.01em;
+}
+.delete-btn-cancel:hover {
+    background: #f0ece7;
+    border-color: #c8bdb0;
+    color: #3d2e22;
+}
+
+/* Confirm / Delete button */
+.delete-btn-confirm {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #9b2c2c, #7b1d1d);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+.delete-btn-confirm:hover {
+    background: linear-gradient(135deg, #822525, #621818);
+    box-shadow: 0 4px 16px rgba(120, 30, 30, 0.35);
+    transform: translateY(-1px);
+}
+.delete-btn-confirm:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+@media (max-width: 480px) {
+    .delete-modal-dialog { max-width: calc(100vw - 2rem); margin: 1rem; }
+    .delete-modal-body { padding: 2rem 1.5rem 1.25rem; }
+    .delete-modal-footer { padding: 0 1.5rem 1.75rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Search & Filter -->
+<div class="card">
+    <div class="card-body">
+        <form method="get" action="{% url 'spa_services:admin_services' %}" id="searchFilterForm">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="searchInput"
+                               name="search" placeholder="Tìm kiếm dịch vụ..."
+                               value="{{ search_query }}"
+                               autocomplete="off">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="categoryFilter" name="category">
+                        <option value="">Tất cả danh mục</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.code }}" {% if category_filter == cat.code %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter" name="status">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Đang hoạt động</option>
+                        <option value="INACTIVE" {% if status_filter == 'INACTIVE' %}selected{% endif %}>Ngừng hoạt động</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-secondary flex-fill" id="servicesFilterBtn">
+                            <i class="fas fa-filter me-1"></i>Lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Services Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list" style="color: #d4a853; margin-right: 0.5rem;"></i>
+                Danh sách dịch vụ
+            </h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                <i class="fas fa-plus me-2"></i>
+                Thêm dịch vụ mới
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Hình ảnh</th>
+                        <th>Tên dịch vụ</th>
+                        <th>Danh mục</th>
+                        <th>Gói dịch vụ</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if services %}
+                        {% for service in services %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ service.code }}</span></td>
+                            <td>
+                                <img src="{{ service.get_image_url }}"
+                                     class="rounded"
+                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                     alt="{{ service.name }}"
+                                     onerror="this.src='https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=100'">
+                            </td>
+                            <td>
+                                <strong>{{ service.name }}</strong>
+                                <br>
+                                <small class="text-muted">{% if service.short_description %}{{ service.short_description|truncatewords:10 }}{% else %}{{ service.description|truncatewords:10 }}{% endif %}</small>
+                            </td>
+                            <td>{{ service.get_category_name }}</td>
+                            <td>
+                                {% with service.variants.all as variants %}
+                                {% if variants %}
+                                    {% for v in variants %}
+                                    <div class="text-nowrap small {% if not forloop.last %}mb-1{% endif %}">
+                                        <span class="text-muted">{{ v.duration_minutes }}p</span>
+                                        <span class="mx-1 text-muted">—</span>
+                                        <span class="fw-semibold text-warning">{{ v.price|vnd }}</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted small">Chưa có gói</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <span class="badge {% if service.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ service.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editService({{ service.id }})" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteService({{ service.id }})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                {% if is_filtered %}
+                                <p class="mb-0 text-muted">Không tìm thấy dịch vụ phù hợp.</p>
+                                {% else %}
+                                <p class="mb-0 text-muted">Chưa có dịch vụ nào trong hệ thống</p>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if services.has_other_pages %}
+    <div class="card-footer">
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if services.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ services.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in services.paginator.page_range %}
+                    {% if page_num == services.number %}
+                        <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% elif page_num > services.number|add:'-3' and page_num < services.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ page_num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if services.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ services.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add / Edit Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f,#2c5282); color:#fff; border:none; padding:1rem 1.5rem;">
+                <h5 class="modal-title mb-0">
+                    <i class="fas fa-plus me-2" style="color:#d4a853;"></i>
+                    Thêm dịch vụ mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <form id="addServiceForm" method="post"
+                      action="{% url 'spa_services:api_service_create' %}"
+                      enctype="multipart/form-data"
+                      onsubmit="return submitServiceForm(event)">
+                    {% csrf_token %}
+
+                    <div class="row g-0">
+                        <!-- ══════════════════════════════════════
+                             CỘT TRÁI — Thông tin dịch vụ
+                        ══════════════════════════════════════ -->
+                        <div class="col-md-7 p-3 d-flex flex-column">
+
+                            <!-- Block: Thông tin cơ bản -->
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <i class="fas fa-info-circle"></i> Thông tin cơ bản
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-5">
+                                        <label class="form-label mb-1 small fw-semibold">Mã dịch vụ</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="code" id="serviceCodeInput"
+                                               placeholder="Nhập mã dịch vụ" maxlength="30">
+                                    </div>
+                                    <div class="col-7">
+                                        <label class="form-label mb-1 small fw-semibold">
+                                            Danh mục <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select form-select-sm" name="category_number" required>
+                                            <option value="">Chọn danh mục...</option>
+                                            {% for cat in categories %}
+                                            <option value="{{ cat.code }}">{{ cat.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-8">
+                                        <label class="form-label mb-1 small fw-semibold">
+                                            Tên dịch vụ <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="name" placeholder="Nhập tên dịch vụ..." required>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label mb-1 small fw-semibold">Trạng thái</label>
+                                        <select class="form-select form-select-sm" name="status" required>
+                                            <option value="ACTIVE" selected>Hoạt động</option>
+                                            <option value="INACTIVE">Tạm dừng</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Block: Mô tả ngắn -->
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <i class="fas fa-align-left"></i> Mô tả ngắn
+                                    <span class="ms-auto text-muted" style="font-size:0.68rem; text-transform:none; letter-spacing:0; font-weight:400;">
+                                        Hiển thị ở trang danh sách dịch vụ
+                                    </span>
+                                </div>
+                                <div class="desc-field-wrap">
+                                    <textarea class="form-control form-control-sm"
+                                              name="short_description"
+                                              id="shortDescInput"
+                                              rows="2"
+                                              maxlength="255"
+                                              placeholder="Mô tả ngắn gọn về dịch vụ, hiển thị trên card danh sách..."
+                                              oninput="updateCounter('shortDescInput','shortDescCounter',255)"></textarea>
+                                    <span class="desc-counter" id="shortDescCounter">0 / 255</span>
+                                </div>
+                            </div>
+
+                            <!-- Block: Mô tả chi tiết -->
+                            <div class="form-section d-flex flex-column flex-grow-1" style="margin-bottom:0;">
+                                <div class="form-section-title">
+                                    <i class="fas fa-align-justify"></i> Mô tả chi tiết
+                                    <span class="ms-auto text-muted" style="font-size:0.68rem; text-transform:none; letter-spacing:0; font-weight:400;">
+                                        Hiển thị ở trang chi tiết dịch vụ
+                                    </span>
+                                </div>
+                                <textarea class="form-control form-control-sm flex-grow-1"
+                                          name="description"
+                                          rows="5"
+                                          style="resize: none;"
+                                          placeholder="Mô tả đầy đủ về dịch vụ: công dụng, lợi ích, quy trình thực hiện..."></textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- ══════════════════════════════════════
+                             CỘT PHẢI — Gói dịch vụ + Hình ảnh
+                        ══════════════════════════════════════ -->
+                        <div class="col-md-5 col-divider p-3">
+
+                            <!-- Block: Gói dịch vụ -->
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <i class="fas fa-boxes"></i> Gói dịch vụ
+                                </div>
+                                <div id="variantList" class="mb-2"></div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm w-100"
+                                        onclick="addVariantRow()">
+                                    <i class="fas fa-plus me-1"></i> Thêm gói
+                                </button>
+                            </div>
+
+                            <!-- Block: Hình ảnh -->
+                            <div class="form-section" style="margin-bottom:0;">
+                                <div class="form-section-title">
+                                    <i class="fas fa-image"></i> Hình ảnh dịch vụ
+                                </div>
+                                <input type="file" class="form-control form-control-sm"
+                                       name="image"
+                                       accept="image/jpeg,image/jpg,image/png,image/webp"
+                                       required
+                                       onchange="previewImage(this)">
+                                <div class="field-hint mt-1">
+                                    <i class="fas fa-info-circle"></i>
+                                    JPG, PNG, WebP — tối đa 5 MB, tối thiểu 300 × 300 px.
+                                </div>
+                                <div id="imagePreview" class="mt-2" style="display:none;">
+                                    <img id="previewImg" src="" alt="Preview"
+                                         style="width:100%; max-height:160px; border-radius:10px;
+                                                border:2px solid #e9ecef; object-fit:cover;">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div><!-- /row -->
+
+                </form>
+            </div><!-- /modal-body -->
+
+            <div class="modal-footer" style="border-top:1px solid #e9ecef; padding:0.75rem 1.25rem;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Hủy
+                </button>
+                <button type="submit" class="btn btn-primary" form="addServiceForm">
+                    <i class="fas fa-plus me-2"></i>Thêm dịch vụ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa dịch vụ -->
+<div class="modal fade" id="deleteServiceModal" tabindex="-1" aria-labelledby="deleteServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered delete-modal-dialog">
+        <div class="modal-content delete-modal-content">
+            <!-- Nút đóng góc phải -->
+            <button type="button" class="delete-modal-close" data-bs-dismiss="modal" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="delete-modal-body">
+                <!-- Icon -->
+                <div class="delete-modal-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+
+                <!-- Text -->
+                <p class="delete-modal-question">Bạn có chắc muốn xóa dịch vụ này?</p>
+            </div>
+
+            <div class="delete-modal-footer">
+                <button type="button" class="delete-btn-cancel" data-bs-dismiss="modal">
+                    Hủy
+                </button>
+                <button type="button" class="delete-btn-confirm" id="confirmDeleteServiceBtn">
+                    <i class="fas fa-trash-alt me-2"></i>Xóa dịch vụ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast {% if message.tags %}{{ message.tags }}{% endif %} show">
+            <div class="toast-header">
+                <span class="toast-title">
+                    {% if message.tags == 'success' %}Thành công{% elif message.tags == 'error' %}Lỗi{% else %}Thông báo{% endif %}
+                </span>
+                <button class="toast-close" onclick="hideToast()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-body">{{ message }}</div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    <div class="toast" id="toast">
+        <div class="toast-header">
+            <span class="toast-title" id="toastTitle">Thông báo</span>
+            <button class="toast-close" onclick="hideToast()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-services.js' %}?v={% now "U" %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    FilterManager.initFormPage({
+        formId:  'searchFilterForm',
+        btnId:   'servicesFilterBtn',
+        fields:  ['searchInput', 'categoryFilter', 'statusFilter'],
+    });
+});
+</script>
+{% endblock %}

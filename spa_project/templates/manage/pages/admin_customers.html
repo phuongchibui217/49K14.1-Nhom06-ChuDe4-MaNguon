@@ -1,0 +1,245 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khách hàng - Spa ANA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <style>
+        .search-box { position: relative; max-width: 400px; }
+        .search-box input { padding-left: 2.5rem; border-radius: 25px; border: 2px solid #e9ecef; }
+        .search-box input:focus { border-color: #d4a853; box-shadow: 0 0 0 3px rgba(212, 168, 53, 0.1); }
+        .search-box i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #adb5bd; }
+        .customer-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+        .customer-table .table thead th { background: #1e3a5f; color: white; border: none; padding: 1rem; font-weight: 600; }
+        .customer-table .table tbody tr:hover { background: #f8f9fa; }
+        .action-btn { padding: 0.25rem 0.5rem; border-radius: 8px; border: none; cursor: pointer; margin: 0 0.25rem; }
+        .action-btn.view { background: #e3f2fd; color: #1976d2; }
+        .action-btn.edit { background: #fff3e0; color: #f57c00; }
+        .action-btn.delete { background: #ffebee; color: #d32f2f; }
+        .action-btn:hover { transform: scale(1.1); }
+        .drawer { position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: white; box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2); z-index: 1050; transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; }
+        .drawer.show { transform: translateX(0); }
+        .drawer-header { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .drawer-content { padding: 1.5rem; }
+        .detail-section { margin-bottom: 2rem; }
+        .detail-section h6 { color: #1e3a5f; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #d4a853; }
+        .detail-item { display: flex; margin-bottom: 0.75rem; }
+        .detail-label { min-width: 120px; font-weight: 600; color: #6c757d; }
+        .detail-value { color: #1e3a5f; }
+        .note-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 1rem; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        {% include 'manage/includes/sidebar.html' %}
+        <div class="admin-content">
+            <header class="admin-header">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-light me-3" id="sidebarToggle" style="display: none;"><i class="fas fa-bars"></i></button>
+                    <h4 class="mb-0">Quản lý Khách hàng</h4>
+                </div>
+            </header>
+            <main class="admin-main">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <form method="get" action="{% url 'customers:admin_customers' %}" class="search-box mb-0 w-100" id="searchFilterForm">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control" name="search" id="searchInput" placeholder="Tìm kiếm theo tên hoặc số điện thoại..." value="{{ search_query }}">
+                                    <button type="submit" class="d-none"></button>
+                                </form>
+                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                    <i class="fas fa-plus me-2"></i>Thêm khách hàng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="customer-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="customerTable">
+                            <thead><tr><th>Mã KH</th><th>Họ tên</th><th>Số điện thoại</th><th>Kênh liên hệ</th><th>Tổng lịch hẹn</th><th>Hành động</th></tr></thead>
+                            <tbody id="customerTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                {% if customers.has_other_pages %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if customers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Trước</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
+                        {% endif %}
+
+                        {% for num in customers.paginator.page_range %}
+                            {% if customers.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if customers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Sau</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">Sau</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div class="modal fade" id="addCustomerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Thêm khách hàng mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCustomerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label"><span class="text-danger">*</span> Họ tên</label><input type="text" class="form-control" id="addName" required></div>
+                            <div class="col-md-6 mb-3"><label class="form-label"><span class="text-danger">*</span> Số điện thoại</label><input type="text" class="form-control" id="addPhone" required></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">Ngày sinh</label><input type="date" class="form-control" id="addDob"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">Kênh liên hệ</label><select class="form-select" id="addChannel"><option value="Zalo">Zalo</option><option value="Điện thoại">Điện thoại</option><option value="Facebook">Facebook</option><option value="Khác">Khác</option></select></div>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Dị ứng</label><textarea class="form-control" id="addAllergies" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Tình trạng da</label><textarea class="form-control" id="addSkinCondition" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Ghi chú khác</label><textarea class="form-control" id="addNotes" rows="2"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning" onclick="addCustomer()"><i class="fas fa-save me-2"></i>Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div class="modal fade" id="editCustomerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Cập nhật thông tin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCustomerForm">
+                        <input type="hidden" id="editCustomerId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label"><span class="text-danger">*</span> Họ tên</label><input type="text" class="form-control" id="editName" required></div>
+                            <div class="col-md-6 mb-3"><label class="form-label"><span class="text-danger">*</span> Số điện thoại</label><input type="text" class="form-control" id="editPhone" required></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label">Ngày sinh</label><input type="date" class="form-control" id="editDob"></div>
+                            <div class="col-md-6 mb-3"><label class="form-label">Kênh liên hệ</label><select class="form-select" id="editChannel"><option value="Zalo">Zalo</option><option value="Điện thoại">Điện thoại</option><option value="Facebook">Facebook</option><option value="Khác">Khác</option></select></div>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Dị ứng</label><textarea class="form-control" id="editAllergies" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Tình trạng da</label><textarea class="form-control" id="editSkinCondition" rows="2"></textarea></div>
+                        <div class="mb-3"><label class="form-label">Ghi chú khác</label><textarea class="form-control" id="editNotes" rows="2"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning" onclick="updateCustomer()"><i class="fas fa-save me-2"></i>Cập nhật</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Detail Drawer -->
+    <div class="drawer" id="customerDrawer">
+        <div class="drawer-header"><h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Chi tiết khách hàng</h5><button class="btn btn-sm btn-light" onclick="closeDrawer()"><i class="fas fa-times"></i></button></div>
+        <div class="drawer-content" id="drawerContent"></div>
+    </div>
+    <div id="drawerOverlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1040; display: none;" onclick="closeDrawer()"></div>
+
+    <!-- Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <div id="toast" class="toast" role="alert"><div class="toast-header"><strong class="me-auto" id="toastTitle">Thông báo</strong><button type="button" class="btn-close" data-bs-dismiss="toast"></button></div><div class="toast-body" id="toastMessage"></div></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/dialog-modal.js' %}?v={% now 'His' %}"></script>
+    <script src="{% static 'js/filter-manager.js' %}"></script>
+    <script>
+        let customers = [
+            {id:'KH001',name:'Nguyễn Thị Mai',phone:'0912345678',dob:'1990-05-15',channel:'Zalo',allergies:'Không',skinCondition:'Da dầu, mụn nhẹ',notes:'Khách VIP',totalAppointments:24,createdAt:'2024-01-15'},
+            {id:'KH002',name:'Trần Văn Hùng',phone:'0987654321',dob:'1985-08-22',channel:'Facebook',allergies:'Dị ứng tinh dầu cam',skinCondition:'Da nhạy cảm',notes:'Thích massage',totalAppointments:15,createdAt:'2024-02-10'},
+            {id:'KH003',name:'Lê Thu Thảo',phone:'0345678901',dob:'1995-11-30',channel:'Điện thoại',allergies:'Không',skinCondition:'Da khô',notes:'Khách mới',totalAppointments:3,createdAt:'2024-06-20'},
+            {id:'KH004',name:'Phạm Minh Đức',phone:'0789012345',dob:'1992-03-18',channel:'Zalo',allergies:'Dị ứng cà phê',skinCondition:'Da hỗn hợp',notes:'Đến theo giới thiệu',totalAppointments:8,createdAt:'2024-04-05'}
+        ];
+        document.addEventListener('DOMContentLoaded',function(){
+            loadCustomers();
+
+            function doSearch() { searchCustomers(); }
+            function doClear()  { loadCustomers(); }
+
+            new FilterManager({
+                fields:   ['searchInput'],
+                btnId:    'searchBtn',
+                searchId: 'searchInput',
+                onApply:  () => doSearch(),
+                onClear:  () => doClear(),
+            });
+        });
+        function loadCustomers(){
+            const tbody=document.getElementById('customerTableBody');tbody.innerHTML='';
+            customers.forEach(c=>{const row=document.createElement('tr');row.innerHTML=`<td><strong>${c.id}</strong></td><td>${c.name}</td><td>${c.phone}</td><td><span class="badge bg-info">${c.channel}</span></td><td>${c.totalAppointments}</td><td><button class="action-btn view" onclick="viewCustomer('${c.id}')" title="Xem"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="editCustomer('${c.id}')" title="Sửa"><i class="fas fa-edit"></i></button><button class="action-btn delete" onclick="deleteCustomer('${c.id}')" title="Xóa"><i class="fas fa-trash"></i></button></td>`;tbody.appendChild(row);});
+        }
+        function searchCustomers(){
+            const term=document.getElementById('searchInput').value.toLowerCase();
+            const filtered=customers.filter(c=>c.name.toLowerCase().includes(term)||c.phone.includes(term));
+            const tbody=document.getElementById('customerTableBody');tbody.innerHTML='';
+            if(filtered.length===0){tbody.innerHTML='<tr><td colspan="6" class="text-center py-4">Không tìm thấy</td></tr>';return;}
+            filtered.forEach(c=>{const row=document.createElement('tr');row.innerHTML=`<td><strong>${c.id}</strong></td><td>${c.name}</td><td>${c.phone}</td><td><span class="badge bg-info">${c.channel}</span></td><td>${c.totalAppointments}</td><td><button class="action-btn view" onclick="viewCustomer('${c.id}')" title="Xem"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="editCustomer('${c.id}')" title="Sửa"><i class="fas fa-edit"></i></button><button class="action-btn delete" onclick="deleteCustomer('${c.id}')" title="Xóa"><i class="fas fa-trash"></i></button></td>`;tbody.appendChild(row);});
+        }
+        function addCustomer(){
+            const name=document.getElementById('addName').value.trim();const phone=document.getElementById('addPhone').value.trim();
+            if(!name||!phone){showToast('warning','Vui lòng nhập đầy đủ thông tin bắt buộc');return;}
+            if(!/^[0-9]{10,11}$/.test(phone)){showToast('warning','Số điện thoại không hợp lệ');return;}
+            const newCustomer={id:'KH'+String(customers.length+1).padStart(3,'0'),name,phone,dob:document.getElementById('addDob').value,channel:document.getElementById('addChannel').value,allergies:document.getElementById('addAllergies').value.trim(),skinCondition:document.getElementById('addSkinCondition').value.trim(),notes:document.getElementById('addNotes').value.trim(),totalAppointments:0,createdAt:new Date().toISOString().split('T')[0]};
+            customers.push(newCustomer);loadCustomers();bootstrap.Modal.getInstance(document.getElementById('addCustomerModal')).hide();document.getElementById('addCustomerForm').reset();showToast('success','Thêm khách hàng thành công');
+        }
+        function editCustomer(id){
+            const c=customers.find(x=>x.id===id);if(!c)return;
+            document.getElementById('editCustomerId').value=c.id;document.getElementById('editName').value=c.name;document.getElementById('editPhone').value=c.phone;document.getElementById('editDob').value=c.dob;document.getElementById('editChannel').value=c.channel;document.getElementById('editAllergies').value=c.allergies;document.getElementById('editSkinCondition').value=c.skinCondition;document.getElementById('editNotes').value=c.notes;
+            new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+        }
+        function updateCustomer(){
+            const id=document.getElementById('editCustomerId').value;const idx=customers.findIndex(x=>x.id===id);if(idx===-1)return;
+            customers[idx]={...customers[idx],name:document.getElementById('editName').value.trim(),phone:document.getElementById('editPhone').value.trim(),dob:document.getElementById('editDob').value,channel:document.getElementById('editChannel').value,allergies:document.getElementById('editAllergies').value.trim(),skinCondition:document.getElementById('editSkinCondition').value.trim(),notes:document.getElementById('editNotes').value.trim()};
+            loadCustomers();bootstrap.Modal.getInstance(document.getElementById('editCustomerModal')).hide();showToast('success','Cập nhật thành công');
+        }
+        function viewCustomer(id){
+            const c=customers.find(x=>x.id===id);if(!c)return;
+            document.getElementById('drawerContent').innerHTML=`<div class="detail-section"><h6><i class="fas fa-user me-2"></i>Thông tin cá nhân</h6><div class="detail-item"><span class="detail-label">Mã KH:</span><span class="detail-value"><strong>${c.id}</strong></span></div><div class="detail-item"><span class="detail-label">Họ tên:</span><span class="detail-value">${c.name}</span></div><div class="detail-item"><span class="detail-label">SĐT:</span><span class="detail-value">${c.phone}</span></div><div class="detail-item"><span class="detail-label">Ngày sinh:</span><span class="detail-value">${c.dob||'Chưa cập nhật'}</span></div><div class="detail-item"><span class="detail-label">Kênh LH:</span><span class="detail-value badge bg-info">${c.channel}</span></span></div></div><div class="detail-section"><h6><i class="fas fa-sticky-note me-2"></i>Ghi chú</h6>${c.allergies?`<div class="note-box"><strong>Dị ứng:</strong> ${c.allergies}</div>`:''}${c.skinCondition?`<div class="note-box" style="background:#e3f2fd;border-color:#2196f3;"><strong>Tình trạng da:</strong> ${c.skinCondition}</div>`:''}</div><div class="detail-section"><h6><i class="fas fa-calendar-check me-2"></i>Thống kê</h6><div class="detail-item"><span class="detail-label">Tổng lịch hẹn:</span><span class="detail-value badge bg-warning">${c.totalAppointments}</span></div></div><div class="d-grid gap-2"><button class="btn btn-warning" onclick="editCustomerFromDrawer('${c.id}')"><i class="fas fa-edit me-2"></i>Chỉnh sửa</button></div>`;
+            document.getElementById('drawerOverlay').style.display='block';document.getElementById('customerDrawer').classList.add('show');
+        }
+        function editCustomerFromDrawer(id){closeDrawer();setTimeout(()=>editCustomer(id),300);}
+        function closeDrawer(){document.getElementById('drawerOverlay').style.display='none';document.getElementById('customerDrawer').classList.remove('show');}
+        async function deleteCustomer(id){const c=customers.find(x=>x.id===id);if(!c)return;if(await window.showConfirm(`Xóa khách hàng ${c.name}?`,{title:'Xác nhận xóa khách hàng',confirmText:'Xóa',cancelText:'Hủy'})){customers=customers.filter(x=>x.id!==id);loadCustomers();showToast('success','Xóa thành công');}}
+        function showToast(type,msg){const t=document.getElementById('toastTitle'),m=document.getElementById('toastMessage');t.textContent=type==='success'?'Thành công':'Cảnh báo';m.innerHTML=type==='success'?`<i class="fas fa-check-circle text-success me-2"></i>${msg}`:`<i class="fas fa-exclamation-circle text-warning me-2"></i>${msg}`;new bootstrap.Toast(document.getElementById('toast')).show();}
+        document.getElementById('sidebarToggle').addEventListener('click',function(){document.getElementById('sidebar').classList.toggle('show');});
+    </script>
+</body>
+</html>

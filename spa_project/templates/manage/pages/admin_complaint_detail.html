@@ -1,0 +1,476 @@
+{% extends "manage/base.html" %}
+{% load static %}
+
+{% block title %}Chi tiết khiếu nại - {{ complaint.code }}{% endblock %}
+
+{% block page_title %}Chi tiết khiếu nại{% endblock %}
+
+{% block extra_css %}
+<style>
+.complaint-detail-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+}
+.complaint-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+}
+.complaint-body {
+    padding: 24px;
+}
+.info-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+.info-value {
+    color: #333;
+    font-size: 15px;
+}
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.status-new { background: #e3f2fd; color: #1976d2; }
+.status-pending { background: #fff3e0; color: #f57c00; }
+.status-assigned { background: #e8f5e9; color: #388e3c; }
+.status-processing { background: #e0f7fa; color: #00838f; }
+.status-waiting_customer { background: #fff8e1; color: #ffa000; }
+.status-resolved { background: #e8f5e9; color: #2e7d32; }
+.status-closed { background: #f5f5f5; color: #757575; }
+.priority-low { color: #4caf50; }
+.priority-medium { color: #ff9800; }
+.priority-high { color: #f44336; }
+.priority-urgent { color: #d32f2f; font-weight: bold; }
+.reply-item {
+    padding: 16px;
+    border-left: 3px solid #e0e0e0;
+    margin-bottom: 16px;
+    background: #fafafa;
+    border-radius: 0 8px 8px 0;
+}
+.reply-item.staff-reply {
+    border-left-color: #4caf50;
+    background: #f1f8e9;
+}
+.reply-item.customer-reply {
+    border-left-color: #2196f3;
+    background: #e3f2fd;
+}
+.reply-item.internal-note {
+    border-left-color: #ff9800;
+    background: #fff8e1;
+}
+.timeline-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 12px;
+    border-left: 2px solid #e0e0e0;
+    margin-left: 8px;
+}
+.timeline-item:last-child {
+    border-left-color: transparent;
+}
+.timeline-dot {
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #bdbdbd;
+}
+.action-btn {
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e91e63;
+}
+
+/* Custom checkbox lớn hơn */
+.form-check-input[type="checkbox"] {
+    width: 1.4em;
+    height: 1.4em;
+    margin-top: 0.15em;
+    cursor: pointer;
+}
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.form-check-label {
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-check {
+    padding-left: 0;
+    margin-bottom: 1rem !important;
+}
+
+.form-check .form-check-input {
+    margin-left: 0;
+    margin-right: 0.6rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'complaints:admin_complaints' %}">Quản lý khiếu nại</a></li>
+            <li class="breadcrumb-item active">{{ complaint.code }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Left Column: Complaint Info -->
+        <div class="col-lg-8">
+            <!-- Main Info Card -->
+            <div class="complaint-detail-card">
+                <div class="complaint-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h4 class="mb-2">{{ complaint.title }}</h4>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="text-muted">{{ complaint.code }}</span>
+                            <span class="status-badge status-{{ complaint.status }}">{{ complaint.get_status_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="complaint-body">
+                    <p class="mb-4" style="white-space: pre-wrap;">{{ complaint.content }}</p>
+                    
+                    {% if complaint.expected_solution %}
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-lightbulb"></i> Giải pháp mong muốn:</strong><br>
+                        {{ complaint.expected_solution }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if complaint.related_service or complaint.appointment_code %}
+                    <div class="row mt-3">
+                        {% if complaint.related_service %}
+                        <div class="col-md-6">
+                            <p class="info-label">Dịch vụ liên quan</p>
+                            <p class="info-value">{{ complaint.related_service.name }}</p>
+                        </div>
+                        {% endif %}
+                        {% if complaint.appointment_code %}
+                        <div class="col-md-6">
+                            <p class="info-label">Mã lịch hẹn liên quan</p>
+                            <p class="info-value">{{ complaint.appointment_code }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Customer Info Card -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-user"></i> Thông tin khách hàng</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="info-label">Họ và tên</p>
+                            <p class="info-value">{{ complaint.customer_name_snapshot }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="info-label">Số điện thoại</p>
+                            <p class="info-value">
+                                <a href="tel:{{ complaint.customer_phone_snapshot }}">{{ complaint.customer_phone_snapshot }}</a>
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="info-label">Email</p>
+                            <p class="info-value">
+                                {% if complaint.customer_email_snapshot %}
+                                <a href="mailto:{{ complaint.customer_email_snapshot }}">{{ complaint.customer_email_snapshot }}</a>
+                                {% else %}—{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Replies Section -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-comments"></i> Phản hồi ({{ all_replies.count }})</h5>
+                    
+                    {% if all_replies %}
+                        {% for reply in all_replies %}
+                        <div class="reply-item {% if reply.sender_role == 'CUSTOMER' %}customer-reply{% elif reply.is_internal %}internal-note{% else %}staff-reply{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ reply.sender_name }}</strong>
+                                    <span class="badge {% if reply.sender_role == 'CUSTOMER' %}bg-info{% else %}bg-success{% endif %} ms-2">
+                                        {{ reply.get_sender_role_display }}
+                                    </span>
+                                    {% if reply.is_internal %}
+                                    <span class="badge bg-warning text-dark ms-1">Ghi chú nội bộ</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ reply.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <p class="mb-0" style="white-space: pre-wrap;">{{ reply.message }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-comments fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <p>Chưa có phản hồi nào</p>
+                        </div>
+                    {% endif %}                </div>
+            </div>
+
+            <!-- Reply Form -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-reply"></i> Gửi phản hồi</h5>
+                    <form method="post" action="{% url 'complaints:admin_complaint_reply' complaint.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea name="message" class="form-control" rows="4" placeholder="Nhập nội dung phản hồi..." required></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="is_internal" id="is_internal">
+                            <label class="form-check-label" for="is_internal">
+                                <i class="fas fa-lock text-warning"></i> Ghi chú nội bộ (khách hàng không thấy)
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Gửi phản hồi
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Actions & History -->
+        <div class="col-lg-4">
+            <!-- Status & Assignee Card -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-info-circle"></i> Thông tin xử lý</h5>
+                    
+                    <div class="mb-3">
+                        <p class="info-label">Trạng thái</p>
+                        <span class="status-badge status-{{ complaint.status }}">{{ complaint.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="info-label">Người phụ trách</p>
+                        {% if complaint.assigned_to %}
+                            <p class="info-value">
+                                <i class="fas fa-user-check text-success"></i> 
+                                {{ complaint.assigned_to.get_full_name|default:complaint.assigned_to.username }}
+                            </p>
+                        {% else %}
+                            <p class="text-muted"><i class="fas fa-user-clock"></i> Chưa phân công</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="info-label">Ngày tạo</p>
+                        <p class="info-value">{{ complaint.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="info-label">Cập nhật lần cuối</p>
+                        <p class="info-value">{{ complaint.updated_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    {% if complaint.resolved_at %}
+                    <div class="mb-3">
+                        <p class="info-label">Ngày hoàn thành</p>
+                        <p class="info-value text-success">{{ complaint.resolved_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-cogs"></i> Hành động</h5>
+                    
+                    {% if not complaint.assigned_to %}
+                    <!-- Take Ownership -->
+                    <form method="post" action="{% url 'complaints:admin_complaint_take' complaint.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success action-btn">
+                            <i class="fas fa-hand-paper"></i> Nhận xử lý
+                        </button>
+                    </form>
+                    {% endif %}
+                    
+                    <!-- Assign Form -->
+                    {% if not complaint.assigned_to or request.user.is_superuser %}
+                    <button type="button" class="btn btn-outline-primary action-btn" data-bs-toggle="modal" data-bs-target="#assignModal">
+                        <i class="fas fa-user-plus"></i> Phân công
+                    </button>
+                    {% endif %}
+                    
+                    <!-- Update Status -->
+                    <button type="button" class="btn btn-outline-secondary action-btn" data-bs-toggle="modal" data-bs-target="#statusModal">
+                        <i class="fas fa-exchange-alt"></i> Đổi trạng thái
+                    </button>
+                    
+                    <!-- Complete -->
+                    {% if complaint.assigned_to and complaint.status != 'RESOLVED' %}
+                    <button type="button" class="btn btn-success action-btn" data-bs-toggle="modal" data-bs-target="#completeModal">
+                        <i class="fas fa-check-circle"></i> Hoàn thành
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Resolution Card -->
+            {% if complaint.resolution %}
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-check-double"></i> Kết quả xử lý</h5>
+                    <p style="white-space: pre-wrap;">{{ complaint.resolution }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- History Card -->
+            <div class="complaint-detail-card">
+                <div class="complaint-body">
+                    <h5 class="section-title"><i class="fas fa-history"></i> Lịch sử</h5>
+                    
+                    {% for item in history %}
+                    <div class="timeline-item {{ item.action }}">
+                        <div class="timeline-dot"></div>
+                        <div>
+                            <strong>{{ item.get_action_display }}</strong>
+                            {% if item.old_value or item.new_value %}
+                                <br><small class="text-muted">
+                                    {% if item.old_value %}{{ item.old_value}} → {% endif %}
+                                    {% if item.new_value %}{{ item.new_value }}{% endif %}
+                                </small>
+                            {% endif %}
+                            {% if item.note %}
+                                <br><small>{{ item.note }}</small>
+                            {% endif %}
+                            <br><small class="text-muted">
+                                {{ item.performed_by.get_full_name|default:item.performed_by.username|default:"Hệ thống" }}
+                                - {{ item.performed_at|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">Chưa có lịch sử</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'complaints:admin_complaint_assign' complaint.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Phân công người phụ trách</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn nhân viên</label>
+                        <select name="assigned_to" class="form-select" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                            {% for user in assign_form.fields.assigned_to.queryset %}
+                            <option value="{{ user.id }}" {% if complaint.assigned_to == user %}selected{% endif %}>
+                                {{ user.get_full_name|default:user.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Phân công</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'complaints:admin_complaint_status' complaint.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Cập nhật trạng thái</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái mới</label>
+                        <select name="status" class="form-select" required>
+                            <option value="NEW" {% if complaint.status == 'NEW' %}selected{% endif %}>Mới tạo</option>
+                            <option value="IN_PROGRESS" {% if complaint.status == 'IN_PROGRESS' %}selected{% endif %}>Đang xử lý</option>
+                            <option value="RESOLVED" {% if complaint.status == 'RESOLVED' %}selected{% endif %}>Đã hoàn thành</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Complete Modal -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'complaints:admin_complaint_complete' complaint.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Đánh dấu hoàn thành</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Kết quả xử lý <span class="text-danger">*</span></label>
+                        <textarea name="resolution" class="form-control" rows="4" placeholder="Nhập kết quả xử lý..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Hoàn thành
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

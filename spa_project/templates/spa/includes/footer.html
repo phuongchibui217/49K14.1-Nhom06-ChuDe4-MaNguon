@@ -1,0 +1,36 @@
+{% load static %}
+<footer class="footer py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <h5>Spa ANA</h5>
+        <p style="color:rgba(255,255,255,.55);font-size:.875rem;line-height:1.7;">Với kiến trúc ChămPa đầy mê hoặc, An Spa được ví như chốn thiên đường chăm sóc sức khỏe, vẻ đẹp và tâm hồn. Nơi đây chính là điểm dừng chân lý tưởng để bạn cùng gia đình, bạn bè, người thân… đến và tận hưởng những khoảnh khắc hạnh phúc nhất.</p>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <h5>Liên Hệ</h5>
+        <ul class="list-unstyled" style="font-size:.875rem;">
+          <li class="mb-2" style="color:rgba(255,255,255,.55);"><i class="fas fa-phone me-2" style="color:var(--gold);"></i>Hotline: 0395330339</li>
+          <li class="mb-2" style="color:rgba(255,255,255,.55);"><i class="fas fa-map-marker-alt me-2" style="color:var(--gold);"></i>Lô 4-A9.4, Đ. 2/9, P. Hòa Cường Bắc, TP. Đà Nẵng</li>
+          <li class="mb-2" style="color:rgba(255,255,255,.55);"><i class="fas fa-globe me-2" style="color:var(--gold);"></i>anspamassage.vn</li>
+        </ul>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <h5>Theo Dõi</h5>
+        <div class="social-icons d-flex flex-wrap gap-3">
+          <a href="https://web.facebook.com/AnspaDaNang" target="_blank" rel="noopener" class="btn" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://zalo.me/4376616698826320568" target="_blank" rel="noopener" class="btn" aria-label="Zalo"><i class="fa-solid fa-message"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <h5>Đặt Lịch</h5>
+        <a href="{% url 'appointments:booking' %}" class="btn-lux btn-lux-full mb-2" style="display:flex;justify-content:center;">Đặt lịch hẹn</a>
+        <a href="https://maps.google.com" target="_blank" rel="noopener"
+           style="display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.65);font-size:.875rem;font-weight:500;transition:var(--ease);">
+          <i class="fas fa-map"></i> Google Maps
+        </a>
+      </div>
+    </div>
+    <hr style="margin:2rem 0;border-color:rgba(255,255,255,.08);">
+    <p class="text-center mb-0" style="font-size:.8rem;color:rgba(255,255,255,.35);">Lập trình web Nhóm 6.</p>
+  </div>
+</footer>

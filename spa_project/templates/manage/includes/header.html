@@ -1,0 +1,14 @@
+{% load static %}
+<!-- Admin Header -->
+<header class="admin-header">
+    <div class="d-flex align-items-center">
+        <button class="btn btn-light me-3" id="sidebarToggle" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h4 class="mb-0">{% block page_title %}{% endblock %}</h4>
+    </div>
+
+    <div class="d-flex align-items-center">
+        {% block header_extra %}{% endblock %}
+    </div>
+</header>

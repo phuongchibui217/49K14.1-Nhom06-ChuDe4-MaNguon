@@ -1,0 +1,323 @@
+{% extends 'spa/base.html' %}
+
+{% load static %}
+
+{% block title %}Lịch hẹn của tôi - Spa ANA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/my-appointments.css' %}?v={% now 'Ymd' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Content với namespace để CSS hoạt động -->
+<div class="my-appointments-page">
+
+  <!-- Page Header -->
+  <section class="page-header">
+    <div class="container">
+      <h1>Lịch Hẹn Của Tôi</h1>
+      <p class="subtitle mb-0">Quản lý và theo dõi các lịch hẹn đặt tại Spa ANA</p>
+    </div>
+  </section>
+
+  <!-- Appointments Section -->
+  <section class="appointments-section">
+    <div class="container">
+
+      <!-- Filter Tabs -->
+      <div class="d-flex justify-content-center mb-4">
+        <div class="filter-bar">
+          <a href="?status=all" class="filter-pill {% if status_filter == 'all' %}active{% endif %}">
+            Tất cả
+            {% if status_counts.all > 0 %}<span class="pill-count">{{ status_counts.all }}</span>{% endif %}
+          </a>
+          <a href="?status=pending" class="filter-pill {% if status_filter == 'pending' %}active{% endif %}">
+            Chờ xác nhận
+            {% if status_counts.pending > 0 %}<span class="pill-count">{{ status_counts.pending }}</span>{% endif %}
+          </a>
+          <a href="?status=confirmed" class="filter-pill {% if status_filter == 'confirmed' %}active{% endif %}">
+            Đã xác nhận
+            {% if status_counts.confirmed > 0 %}<span class="pill-count">{{ status_counts.confirmed }}</span>{% endif %}
+          </a>
+          <a href="?status=completed" class="filter-pill {% if status_filter == 'completed' %}active{% endif %}">
+            Hoàn thành
+            {% if status_counts.completed > 0 %}<span class="pill-count">{{ status_counts.completed }}</span>{% endif %}
+          </a>
+          <a href="?status=cancelled" class="filter-pill {% if status_filter == 'cancelled' %}active{% endif %}">
+            Đã hủy
+            {% if status_counts.cancelled > 0 %}<span class="pill-count">{{ status_counts.cancelled }}</span>{% endif %}
+          </a>
+          <a href="?status=rejected" class="filter-pill {% if status_filter == 'rejected' %}active{% endif %}">
+            Đã từ chối
+            {% if status_counts.rejected > 0 %}<span class="pill-count">{{ status_counts.rejected }}</span>{% endif %}
+          </a>
+        </div>
+      </div>
+
+      <!-- Appointments List -->
+      {% if appointments %}
+      <div class="row">
+        {% for appointment in appointments %}
+        <div class="col-12">
+          <div class="appointment-card">
+
+            <!-- Header: tên dịch vụ + mã | status -->
+            <div class="card-header-section">
+              <div class="service-info">
+                <h5>
+                  {% if appointment.service_variant %}
+                    {{ appointment.service_variant.service.name }}
+                    <span style="font-size:.85rem;font-weight:400;color:#64748b;">— {{ appointment.service_variant.label }}</span>
+                  {% else %}
+                    <span style="color:#94a3b8;font-style:italic;">Chưa chọn dịch vụ</span>
+                  {% endif %}
+                </h5>
+                <div class="code">
+                  <i class="fas fa-hashtag me-1"></i>{{ appointment.booking.booking_code }}
+                </div>
+              </div>
+              <!-- Status badge: Hiển thị trạng thái theo góc nhìn khách hàng -->
+              <span class="status-badge status-{{ appointment.customer_status_css }}">
+                {{ appointment.customer_status_label }}
+              </span>
+            </div>
+
+            <!-- Body: ngày / giờ / đặt lúc -->
+            <div class="card-details">
+              <div class="detail-item">
+                <i class="far fa-calendar"></i>
+                <span>Ngày hẹn:</span>
+                <span class="value">{{ appointment.appointment_date|date:"d/m/Y" }}</span>
+              </div>
+              <div class="detail-item">
+                <i class="far fa-clock"></i>
+                <span>Giờ:</span>
+                <span class="value">{{ appointment.appointment_time|time:"H:i" }}</span>
+              </div>
+              <div class="detail-item">
+                <i class="fas fa-history"></i>
+                <span>Đặt lúc:</span>
+                <span class="value">{{ appointment.created_at|date:"d/m/Y" }}</span>
+              </div>
+            </div>
+
+            <!-- Ghi chú lần đặt lịch (từ Booking) -->
+            {% if appointment.booking.booker_notes %}
+            <div class="card-notes">
+              <i class="far fa-sticky-note me-1"></i>{{ appointment.booking.booker_notes }}
+            </div>
+            {% endif %}
+
+            <!-- Footer: nút hủy (chỉ khi Booking PENDING hoặc CONFIRMED) -->
+              <!--Kiểm tra: Booking CÓ THỂ hủy được không? -->
+            {% if appointment.booking.status == 'PENDING' or appointment.booking.status == 'CONFIRMED' %}
+              <!-- Appointment ĐÃ XONG CHƯA?-->
+            {% if appointment.status != 'COMPLETED' and appointment.status != 'CANCELLED' %}  
+            
+            <div class="card-action-footer">
+              <form method="post"
+                    action="{% url 'appointments:cancel_appointment' appointment.id %}"
+                    class="cancel-appointment-form"
+                    data-code="{{ appointment.booking.booking_code }}">
+                {% csrf_token %}
+                <button type="button"
+                        class="btn-cancel-appt btn-trigger-cancel"
+                        data-code="{{ appointment.booking.booking_code }}">
+                  <i class="fas fa-times"></i>Hủy lịch
+                </button>
+              </form>
+            </div>
+            {% endif %}
+            {% endif %}
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Empty State -->
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-calendar-times fa-4x mb-3"></i>
+        <h3>Không tìm thấy lịch hẹn nào</h3>
+        <p class="text-muted mb-4">
+          {% if status_filter != 'all' %}
+          Không có lịch hẹn nào ở trạng thái này.
+          {% else %}
+          Bạn chưa đặt lịch hẹn nào. Hãy trải nghiệm dịch vụ của chúng tôi!
+          {% endif %}
+        </p>
+        <a href="{% url 'appointments:booking' %}" class="btn-appt-cta">
+          <i class="fas fa-calendar-check"></i> Đặt lịch ngay
+        </a>
+      </div>
+      {% endif %}
+
+    </div>
+  </section>
+
+</div>
+<!-- End .my-appointments-page -->
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL XÁC NHẬN HỦY LỊCH HẸN — style y hệt logout modal
+     ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="cancelApptModal" tabindex="-1" aria-labelledby="cancelApptModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content cancel-appt-modal-content">
+
+      <!-- Icon -->
+      <div class="d-flex justify-content-center">
+        <div class="cancel-appt-modal-icon" aria-hidden="true">!</div>
+      </div>
+
+      <!-- Title -->
+      <h5 class="cancel-appt-modal-title" id="cancelApptModalLabel">Xác nhận hủy lịch</h5>
+
+      <!-- Description -->
+      <p class="cancel-appt-modal-desc">Bạn có chắc muốn hủy lịch hẹn này?</p>
+
+      <!-- Actions -->
+      <div class="cancel-appt-modal-actions">
+        <button type="button" class="capm-btn-cancel" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="capm-btn-confirm" id="cancelApptConfirmBtn">Xác nhận</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  /* ── Backdrop blur — y hệt logout ── */
+  #cancelApptModal.modal {
+    backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  /* ── Dialog sizing ── */
+  #cancelApptModal .modal-dialog {
+    max-width: 400px;
+    width: 92%;
+  }
+
+  /* ── Modal card — clone từ logout ── */
+  .cancel-appt-modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 32px 28px 28px;
+    text-align: center;
+    background: #ffffff;
+    animation: cancelApptModalIn 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  @keyframes cancelApptModalIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1);    }
+  }
+
+  /* ── Icon — vòng tròn border đỏ, chữ ! ── */
+  .cancel-appt-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2.5px solid #e53935;
+    color: #e53935;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* ── Title ── */
+  .cancel-appt-modal-title {
+    font-size: 21px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 10px;
+    line-height: 1.3;
+  }
+
+  /* ── Description ── */
+  .cancel-appt-modal-desc {
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0 0 28px;
+  }
+
+  /* ── Button row — clone từ logout ── */
+  .cancel-appt-modal-actions {
+    display: flex;
+    gap: 14px;
+  }
+
+  .cancel-appt-modal-actions .capm-btn-cancel,
+  .cancel-appt-modal-actions .capm-btn-confirm {
+    flex: 1;
+    height: 50px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s, transform 0.15s;
+  }
+
+  .cancel-appt-modal-actions .capm-btn-cancel {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  .cancel-appt-modal-actions .capm-btn-cancel:hover {
+    background: #e5e7eb;
+  }
+
+  .cancel-appt-modal-actions .capm-btn-confirm {
+    background: #e53935;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(229, 57, 53, 0.28);
+  }
+  .cancel-appt-modal-actions .capm-btn-confirm:hover {
+    background: #c62828;
+    box-shadow: 0 6px 18px rgba(229, 57, 53, 0.38);
+    transform: translateY(-1px);
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modalEl    = document.getElementById('cancelApptModal');
+  const btnConfirm = document.getElementById('cancelApptConfirmBtn');
+  const bsModal    = new bootstrap.Modal(modalEl);
+  let _activeForm  = null;
+
+  // Mở modal khi bấm "Hủy lịch"
+  document.querySelectorAll('.btn-trigger-cancel')  // Tìm tất cả nút có class "btn-trigger-cancel" (tất cả các nút "Hủy lịch")
+    .forEach(function (btn) {                        // Lặp qua TỪNG nút để gắn sự kiện
+      btn.addEventListener('click', function () {    // Khi user bấm vào nút này
+        _activeForm = btn.closest('.cancel-appointment-form');  // Tìm form cha của nút vừa bấm (để biết đang xử lý appointment nào)
+        bsModal.show();                              // Hiện modal xác nhận: "Bạn có chắc muốn hủy?"
+      });
+    });
+
+  // Xử lý khi user bấm "Xác nhận" trong modal
+  btnConfirm.addEventListener('click', function () {     // Lắng nghe sự kiện click vào nút "Xác nhận"
+    if (_activeForm) {                                    // Kiểm tra: đã lưu form nào chưa? (tránh submit rỗng)
+      _activeForm.submit();                               // Submit form NGAY LAP TUC (gửi POST request về server để hủy appointment)
+      bsModal.hide();                                     // Đồng thời đóng modal
+    }
+  });
+
+  // Reset khi modal đóng (user bấm "Hủy" / bấm ESC / click ra ngoài)
+  modalEl.addEventListener('hidden.bs.modal', function () {  // Lắng nghe sự kiện modal đóng
+    _activeForm = null;                                     // Xóa form đã lưu (để lần sau không submit nhầm appointment cũ)
+  });
+});
+</script>
+{% endblock %}

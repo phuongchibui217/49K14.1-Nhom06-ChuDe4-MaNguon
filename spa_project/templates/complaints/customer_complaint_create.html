@@ -1,0 +1,278 @@
+{% extends 'spa/base.html' %}
+{% load static %}
+
+{% block title %}Gửi khiếu nại - Spa ANA{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* page-header: dung global style.css */
+    .page-header { margin-bottom: 2.5rem; }
+
+    .complaint-form-section { padding: 0 0 4rem; }
+
+    /* Form card */
+    .complaint-card {
+        background: var(--bg-white);
+        border-radius: var(--r-xl);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        padding: 2rem 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Section title — dong bo voi booking */
+    .bk-section-title {
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: var(--text-secondary);
+        margin-bottom: 1.25rem;
+        padding-bottom: .75rem;
+        border-bottom: 2px solid var(--gold-light);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    .bk-section-title i { color: var(--gold); }
+
+    /* Customer info box */
+    .customer-info {
+        background: var(--gold-muted);
+        border: 1px solid var(--gold-border);
+        border-radius: var(--r-md);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.75rem;
+    }
+
+    /* Inputs — dong bo voi booking */
+    .form-control, .form-select {
+        border-radius: var(--r-md);
+        border: 1.5px solid var(--border);
+        padding: .65rem 1rem;
+        font-size: .9rem;
+        font-family: var(--font-ui);
+        color: var(--text-primary);
+        transition: border-color .18s, box-shadow .18s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,169,110,.12);
+        outline: none;
+    }
+    .form-control[readonly] {
+        background: var(--bg-subtle);
+        color: var(--text-secondary);
+    }
+    .form-label {
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--text-secondary);
+        margin-bottom: .4rem;
+    }
+    .field-error {
+        font-size: .75rem;
+        color: var(--danger);
+        margin-top: .3rem;
+        display: flex;
+        align-items: center;
+        gap: .3rem;
+    }
+    .is-invalid { border-color: var(--danger) !important; }
+
+    /* Info alert */
+    .info-alert {
+        background: var(--gold-muted);
+        border: 1px solid var(--gold-border);
+        border-radius: var(--r-md);
+        padding: 1rem 1.25rem;
+        font-size: .875rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+    }
+    .info-alert i { color: var(--gold); margin-top: .1rem; flex-shrink: 0; }
+
+    /* Buttons */
+    .btn-cp-save {
+        padding: 10px 28px;
+        border-radius: var(--r-pill);
+        border: none;
+        background: var(--gold);
+        color: #fff;
+        font-size: .875rem;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: var(--font-ui);
+        transition: background .18s, box-shadow .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        text-decoration: none;
+    }
+    .btn-cp-save:hover { background: var(--gold-hover); color: #fff; box-shadow: var(--shadow-gold); }
+    .btn-cp-cancel {
+        padding: 10px 24px;
+        border-radius: var(--r-pill);
+        border: 1.5px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: .875rem;
+        font-weight: 600;
+        font-family: var(--font-ui);
+        transition: border-color .18s, color .18s;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        text-decoration: none;
+    }
+    .btn-cp-cancel:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+    .btn-group-actions {
+        display: flex;
+        gap: .75rem;
+        justify-content: flex-end;
+        margin-top: 1.75rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+        .complaint-card { padding: 1.25rem; }
+        .btn-group-actions { flex-direction: column-reverse; }
+        .btn-cp-save, .btn-cp-cancel { width: 100%; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+    <div class="container">
+        <h1>Gửi khiếu nại</h1>
+        <p class="subtitle mb-0">Chúng tôi sẵn sàng lắng nghe và giải quyết vấn đề của bạn</p>
+    </div>
+</section>
+
+<!-- Complaint Form Section -->
+<section class="complaint-form-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="complaint-card">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-0 rounded-3 mb-3" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Thong tin lien he -->
+                        <div class="customer-info mb-4">
+                            <div class="bk-section-title"><i class="fas fa-user"></i>Thông tin liên hệ</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Họ và tên</label>
+                                    <input type="text" class="form-control"
+                                           value="{{ customer_profile.full_name|default:request.user.get_full_name|default:request.user.username }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input type="tel" class="form-control"
+                                           value="{{ customer_profile.phone|default:'' }}" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control"
+                                           value="{{ request.user.email|default:'' }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Noi dung khieu nai -->
+                        <div class="mb-4">
+                            <div class="bk-section-title"><i class="fas fa-edit"></i>Nội dung khiếu nại</div>
+                            <div class="mb-3">
+                                <label class="form-label">Tiêu đề <span style="color:var(--danger)">*</span></label>
+                                <input type="text" name="title"
+                                       class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                                       value="{{ form.title.value|default:'' }}"
+                                       placeholder="Tóm tắt ngắn gọn vấn đề của bạn" required>
+                                {% if form.title.errors %}
+                                <div class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nội dung chi tiết <span style="color:var(--danger)">*</span></label>
+                                <textarea name="content" rows="5"
+                                          class="form-control {% if form.content.errors %}is-invalid{% endif %}"
+                                          placeholder="Mô tả chi tiết vấn đề của bạn..." required>{{ form.content.value|default:'' }}</textarea>
+                                {% if form.content.errors %}
+                                <div class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.content.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Thong tin lien quan -->
+                        <div class="mb-4">
+                            <div class="bk-section-title"><i class="fas fa-link"></i>Thông tin liên quan</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Ngày xảy ra vấn đề</label>
+                                    <input type="date" name="incident_date" class="form-control"
+                                           value="{{ form.incident_date.value|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Mã lịch hẹn liên quan</label>
+                                    <input type="text" name="appointment_code" class="form-control"
+                                           value="{{ form.appointment_code.value|default:'' }}"
+                                           placeholder="Nhập mã nếu có">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Dịch vụ liên quan</label>
+                                    <select name="related_service" class="form-select">
+                                        <option value="">— Chọn dịch vụ (nếu có) —</option>
+                                        {% for service in form.fields.related_service.queryset %}
+                                        <option value="{{ service.id }}"
+                                                {% if form.related_service.value|stringformat:"s" == service.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ service.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Giải pháp mong muốn</label>
+                                    <textarea name="expected_solution" class="form-control" rows="3"
+                                              placeholder="Bạn mong muốn được giải quyết như thế nào?">{{ form.expected_solution.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Luu y -->
+                        <div class="info-alert mb-4">
+                            <i class="fas fa-info-circle"></i>
+                            <span><strong>Lưu ý:</strong> Khiếu nại của bạn sẽ được xử lý trong vòng 24–48 giờ làm việc. Chúng tôi sẽ liên hệ qua số điện thoại hoặc email đã cung cấp.</span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="btn-group-actions">
+                            <a href="{% url 'complaints:customer_complaint_list' %}" class="btn-cp-cancel">
+                                <i class="fas fa-times"></i>Hủy
+                            </a>
+                            <button type="submit" class="btn-cp-save">
+                                <i class="fas fa-paper-plane"></i>Gửi khiếu nại
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

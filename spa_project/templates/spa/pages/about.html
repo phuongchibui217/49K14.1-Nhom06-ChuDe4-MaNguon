@@ -1,0 +1,342 @@
+{% extends 'spa/base.html' %}
+
+{% block title %}Về Spa ANA{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── ABOUT PAGE ─────────────────────────────────────── */
+
+/* Story section */
+.about-story { padding: 5rem 0; background: var(--bg-white); }
+.about-story__img-wrap {
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.about-story__img-wrap img {
+  width: 100%; height: 420px;
+  object-fit: cover;
+  display: block;
+  transition: transform .5s ease;
+}
+.about-story__img-wrap:hover img { transform: scale(1.04); }
+
+.about-story__eyebrow {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: .75rem; display: block;
+}
+.about-story__title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600; letter-spacing: -.01em;
+  color: var(--text-primary); margin-bottom: 1.25rem;
+}
+.about-story__rule {
+  width: 36px; height: 1px;
+  background: var(--gold); margin-bottom: 1.5rem;
+}
+.about-story__body {
+  font-size: .95rem; line-height: 1.8;
+  color: var(--text-secondary); margin-bottom: 1rem;
+}
+
+/* Stats strip */
+.about-stats {
+  background: #1f2937;
+  padding: 4rem 0;
+}
+.about-stat { text-align: center; padding: 1rem; }
+.about-stat__num {
+  font-size: 2.5rem; font-weight: 700;
+  color: var(--gold); line-height: 1; margin-bottom: .4rem;
+}
+.about-stat__label { font-size: .875rem; color: rgba(255,255,255,.65); }
+
+/* Feature cards */
+.about-features { padding: 5rem 0; background: var(--bg-page); }
+.about-feature {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 2rem 1.75rem;
+  height: 100%;
+  transition: var(--ease);
+}
+.about-feature:hover {
+  border-color: var(--gold-border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+.about-feature__icon {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: var(--gold-muted);
+  border: 1.5px solid var(--gold-border);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.25rem;
+  transition: var(--ease);
+}
+.about-feature:hover .about-feature__icon { background: var(--gold-light); }
+.about-feature__icon i { color: var(--gold); font-size: 1.3rem; }
+.about-feature h4 { font-size: .975rem; font-weight: 600; color: var(--text-primary); margin-bottom: .5rem; }
+.about-feature p { font-size: .875rem; color: var(--text-secondary); margin: 0; line-height: 1.7; }
+
+/* Team */
+.about-team { padding: 5rem 0; background: var(--bg-white); }
+.team-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: var(--ease);
+}
+.team-card:hover {
+  border-color: var(--gold-border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+.team-card__img { height: 260px; overflow: hidden; }
+.team-card__img img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top;
+  transition: transform .5s ease;
+  display: block;
+}
+.team-card:hover .team-card__img img { transform: scale(1.06); }
+.team-card__body { padding: 1.25rem 1.35rem; text-align: center; }
+.team-card__name { font-size: .975rem; font-weight: 600; color: var(--text-primary); margin-bottom: .25rem; }
+.team-card__role { font-size: .8rem; color: var(--text-muted); margin-bottom: .75rem; }
+.team-card__socials { display: flex; justify-content: center; gap: .5rem; }
+.team-card__socials a {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: .75rem;
+  transition: var(--ease); text-decoration: none;
+}
+.team-card__socials a:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-muted);
+}
+
+/* Section header shared */
+.about-section-header { text-align: center; margin-bottom: 3.5rem; }
+.about-section-eyebrow {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: .6rem; display: block;
+}
+.about-section-rule { width: 36px; height: 1px; background: var(--gold); margin: 0 auto .9rem; }
+.about-section-title {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600; letter-spacing: -.01em;
+  color: var(--text-primary); margin: 0 0 .5rem;
+}
+.about-section-sub { font-size: .95rem; color: var(--text-secondary); margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── PAGE HEADER ── #}
+<section class="page-header">
+  <div class="container">
+    <h1>Về Spa ANA</h1>
+    <p class="lead mb-0">Không gian thư giãn và chăm sóc sắc đẹp cao cấp</p>
+  </div>
+</section>
+
+{# ── STORY ── #}
+<section class="about-story">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="about-story__img-wrap">
+          <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800" alt="Spa ANA">
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <span class="about-story__eyebrow">Câu chuyện của chúng tôi</span>
+        <div class="about-story__rule"></div>
+        <h2 class="about-story__title">Hành Trình Mang Lại Vẻ Đẹp Tự Nhiên</h2>
+        <p class="about-story__body">
+          Spa ANA ra đời với sứ mệnh mang lại sự thư giãn tuyệt đối và vẻ đẹp tự nhiên cho mọi khách hàng.
+          Được thành lập năm 2014, chúng tôi đã trở thành điểm đến tin cậy hàng đầu trong lĩnh vực chăm sóc sắc đẹp cao cấp.
+        </p>
+        <p class="about-story__body">
+          Chúng tôi tin rằng vẻ đẹp thực sự bắt nguồn từ sự thư giãn và cân bằng trong tâm hồn.
+          Chính vì vậy, mỗi khách hàng đến với ANA đều được chăm sóc tận tình trong không gian ấm cúng, yên tĩnh.
+        </p>
+        <a href="{% url 'spa_services:service_list' %}" class="btn-lux">
+          <i class="fas fa-arrow-right"></i> Khám phá dịch vụ
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── STATS ── #}
+<section class="about-stats">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      <div class="col-6 col-md-3">
+        <div class="about-stat">
+          <div class="about-stat__num">10+</div>
+          <div class="about-stat__label">Năm kinh nghiệm</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="about-stat">
+          <div class="about-stat__num">30,000+</div>
+          <div class="about-stat__label">Khách hàng hài lòng</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="about-stat">
+          <div class="about-stat__num">20+</div>
+          <div class="about-stat__label">Chuyên gia spa</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="about-stat">
+          <div class="about-stat__num">100%</div>
+          <div class="about-stat__label">Cam kết chất lượng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── WHY CHOOSE US ── #}
+<section class="about-features">
+  <div class="container">
+    <div class="about-section-header">
+      <span class="about-section-eyebrow">Lý do lựa chọn</span>
+      <div class="about-section-rule"></div>
+      <h2 class="about-section-title">Tại Sao Chọn Spa ANA?</h2>
+      <p class="about-section-sub">Những giá trị cốt lõi tạo nên sự khác biệt của chúng tôi</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-user-md"></i></div>
+          <h4>Đội ngũ chuyên gia</h4>
+          <p>Kỹ thuật viên chuyên nghiệp, được đào tạo bài bản với chứng chỉ quốc tế và nhiều năm kinh nghiệm.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-spa"></i></div>
+          <h4>Không gian sang trọng</h4>
+          <p>Không gian ấm cúng, yên tĩnh với thiết kế tinh tế, mang lại cảm giác thư giãn tuyệt đối.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-leaf"></i></div>
+          <h4>Sản phẩm thiên nhiên</h4>
+          <p>Sử dụng 100% sản phẩm thiên nhiên, an toàn cho mọi loại da và không gây kích ứng.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-heart"></i></div>
+          <h4>Chăm sóc tận tâm</h4>
+          <p>Quan tâm và chăm sóc từng chi tiết, đảm bảo trải nghiệm thoải mái nhất cho khách hàng.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-tags"></i></div>
+          <h4>Giá cả hợp lý</h4>
+          <p>Bảng giá minh bạch, nhiều chương trình khuyến mãi hấp dẫn quanh năm cho khách hàng thân thiết.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="about-feature">
+          <div class="about-feature__icon"><i class="fas fa-clock"></i></div>
+          <h4>Hỗ trợ 24/7</h4>
+          <p>Đội ngũ tư vấn nhiệt tình, hỗ trợ khách hàng mọi lúc, mọi nơi với thái độ phục vụ chuyên nghiệp.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── TEAM ── #}
+<section class="about-team">
+  <div class="container">
+    <div class="about-section-header">
+      <span class="about-section-eyebrow">Đội ngũ</span>
+      <div class="about-section-rule"></div>
+      <h2 class="about-section-title">Những Người Tạo Nên Sự Khác Biệt</h2>
+      <p class="about-section-sub">Chuyên gia tận tâm, luôn đặt trải nghiệm của bạn lên hàng đầu</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="team-card">
+          <div class="team-card__img">
+            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400" alt="Nguyễn Thị Mai">
+          </div>
+          <div class="team-card__body">
+            <div class="team-card__name">Nguyễn Thị Mai</div>
+            <div class="team-card__role">Quản lý Spa</div>
+            <div class="team-card__socials">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="team-card">
+          <div class="team-card__img">
+            <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400" alt="Trần Văn Hùng">
+          </div>
+          <div class="team-card__body">
+            <div class="team-card__name">Trần Văn Hùng</div>
+            <div class="team-card__role">Chuyên gia Massage</div>
+            <div class="team-card__socials">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="team-card">
+          <div class="team-card__img">
+            <img src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400" alt="Lê Thu Thảo">
+          </div>
+          <div class="team-card__body">
+            <div class="team-card__name">Lê Thu Thảo</div>
+            <div class="team-card__role">Chuyên gia Chăm sóc da</div>
+            <div class="team-card__socials">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="team-card">
+          <div class="team-card__img">
+            <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400" alt="Phạm Minh Đức">
+          </div>
+          <div class="team-card__body">
+            <div class="team-card__name">Phạm Minh Đức</div>
+            <div class="team-card__role">Chuyên gia Phun thêu</div>
+            <div class="team-card__socials">
+              <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

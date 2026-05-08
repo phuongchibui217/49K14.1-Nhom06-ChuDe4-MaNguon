@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng xuất Admin | Spa ANA</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary-blue: #1f3b5c; --gold: #e1b84f; }
+        * { box-sizing: border-box; font-family: "Segoe UI", sans-serif; }
+        body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #1f3b5c, #2e557f); display: flex; align-items: center; justify-content: center; }
+        .logout-container { width: 400px; background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); text-align: center; }
+        .logout-icon { width: 80px; height: 80px; margin: 0 auto 20px; background: radial-gradient(#fff, #fff8e1); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(225, 184, 79, 0.35); }
+        .logout-icon i { font-size: 36px; color: var(--gold); }
+        h2 { color: var(--primary-blue); margin-bottom: 10px; }
+        p { color: #6b7280; margin-bottom: 25px; }
+        .btn-group { display: flex; gap: 15px; justify-content: center; }
+        .btn { padding: 12px 30px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, var(--gold), #c9a63a); color: white; border: none; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(225, 184, 79, 0.45); }
+        .btn-secondary { background: #e5e7eb; color: #4b5563; border: none; }
+        .btn-secondary:hover { background: #d1d5db; }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
+        <h2>Đăng xuất thành công</h2>
+        <p>Bạn đã đăng xuất khỏi hệ thống quản lý Spa ANA.</p>
+        <div class="btn-group">
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập lại</a>
+            <a href="{% url 'pages:home' %}" class="btn btn-secondary"><i class="fas fa-home me-2"></i>Trang chủ</a>
+        </div>
+    </div>
+    <script>localStorage.removeItem('adminUser');</script>
+</body>
+</html>

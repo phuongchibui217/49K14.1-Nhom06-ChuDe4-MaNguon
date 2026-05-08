@@ -1,0 +1,621 @@
+{% extends "manage/base.html" %}
+
+{% load static %}
+
+{% block title %}Quản lý Lịch hẹn - Spa ANA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-appointments.css' %}?v={% now 'His' %}">
+<link rel="stylesheet" href="{% static 'css/admin-appointments-extracted.css' %}?v={% now 'His' %}">
+
+{% endblock %}
+
+{% block content %}
+<div class="scheduler-card">
+
+  <!-- Tabs  có 2 tab: Lịch theo phòng, Yêu cầu đặt lịch-->
+  <div class="tabs-bar">
+    <ul class="nav nav-pills" id="mainTabs" role="tablist">
+
+      <!-- Tên Tabs Lịch theo phòng-->
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-room" data-bs-toggle="pill" data-bs-target="#pane-room" type="button" role="tab">
+          <i class="fas fa-border-all me-2"></i>Lịch theo phòng
+        </button>
+      </li>
+
+       <!-- Tên Tabs Yêu cầu đặt lịch-->
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-web" data-bs-toggle="pill" data-bs-target="#pane-web" type="button" role="tab">
+          <i class="fas fa-globe me-2"></i>Yêu cầu đặt lịch
+          <span class="badge badge-soft ms-2 d-none" id="webCount"></span>
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div class="tab-content">
+
+    <!-- TAB-Header: Lịch theo phòng -->
+    <div class="tab-pane fade show active" id="pane-room" role="tabpanel">
+
+      <!-- Topbar: điều hướng ngày + nút Tìm kiếm -->
+      <div class="topbar">
+        <div class="left">
+          <!-- Điều khiển ngày xem Lịch -->
+          <div class="appt-date-toolbar">
+            <button type="button" class="appt-date-btn appt-date-icon-btn" id="btnPrev" title="Ngày trước">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button type="button" class="appt-date-btn appt-date-today-btn" id="btnToday">Hôm nay</button>
+            <button type="button" class="appt-date-btn appt-date-icon-btn" id="btnNext" title="Ngày sau">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <label class="appt-date-picker-shell" for="dayPicker">
+              <i class="fas fa-calendar-days"></i>
+              <input type="date" class="appt-day-picker" id="dayPicker" />
+            </label>
+          </div>
+
+          <!-- Nút mở modal tìm kiếm -->
+          <button type="button" class="appt-search-trigger" id="btnOpenSearch">
+            <i class="fas fa-search me-1"></i>Tìm kiếm
+          </button>
+        </div>
+
+        <div class="hint">
+          <i class="fas fa-mouse-pointer me-1"></i>
+          Click ô trống để chọn slot • Click lịch để sửa
+        </div>
+      </div>
+      <!-- HTML chỉ là container rỗng -->
+      <div class="scheduler-wrap" id="schedulerWrap">
+        <div class="scheduler-inner">
+          <div class="time-header" id="timeHeader"></div>
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB- Header: Yêu cầu đặt lịch -->
+    <div class="tab-pane fade" id="pane-web" role="tabpanel">
+      <div class="p-3 web-tab-content">
+
+        <!-- Filter Bar -->
+        <div class="card mb-3 border-0 shadow-sm">
+          <div class="card-body py-2">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                  </span>
+                  <input type="text" class="form-control border-start-0"
+                         id="webSearchInput"
+                         placeholder="Tìm tên khách, SĐT hoặc mã lịch...">
+                </div>
+              </div>
+              <div class="col-md-2">
+                <select class="form-select" id="webServiceFilter">
+                  <option value="">Tất cả dịch vụ</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <input type="date" class="form-control" id="webDateFilter"
+                       title="Lọc theo ngày hẹn">
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-secondary w-100" id="webFilterBtn">
+                  <i class="fas fa-filter me-2"></i>Lọc
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="fw-bold text-muted small">
+            <i class="fas fa-inbox me-1"></i>
+            Danh sách yêu cầu đặt lịch trực tuyến
+          </div>
+        </div>
+
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Khách</th>
+              <th>SĐT</th>
+              <th>Dịch vụ</th>
+              <th>Ngày</th>
+              <th>Giờ</th>
+              <th>Thời lượng</th>
+              <th class="action-cell">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="webTbody">
+            <!-- render bằng JS/ bảng này là do JS sẽ tạo ra = cách lấy dữ liệu qua API -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Tìm kiếm lịch hẹn -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered search-modal-dialog">
+    <div class="modal-content search-modal-content">
+
+      <div class="modal-header py-2 px-3 search-modal-header">
+        <h6 class="modal-title mb-0"><i class="fas fa-search me-2"></i>Tìm kiếm lịch hẹn</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- body: flex column, chiếm phần còn lại -->
+      <div class="modal-body p-0 search-modal-body">
+
+        <!-- Form filter: cố định, không scroll -->
+        <div class="px-3 pt-3 pb-2 border-bottom search-form-area" id="searchFormArea">
+          <!-- Hàng 1: Tên / SĐT / Email -->
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Tên khách / người đặt</label>
+              <input type="text" class="form-control form-control-sm" id="srchName" placeholder="Nhập tên...">
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Số điện thoại</label>
+              <input type="text" class="form-control form-control-sm" id="srchPhone" placeholder="Nhập SĐT...">
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Email</label>
+              <input type="text" class="form-control form-control-sm" id="srchEmail" placeholder="Nhập email...">
+            </div>
+          </div>
+          <!-- Hàng 2: Mã lịch hẹn / Dịch vụ / Trạng thái -->
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Mã lịch hẹn</label>
+              <input type="text" class="form-control form-control-sm" id="srchCode" placeholder="Nhập mã lịch hẹn...">
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Dịch vụ / gói</label>
+              <select class="form-select form-select-sm" id="srchService">
+                <option value="">Tất cả dịch vụ</option>
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Trạng thái</label>
+              <select class="form-select form-select-sm" id="srchStatus">
+                <option value="">Tất cả trạng thái</option>
+                <option value="NOT_ARRIVED">Chưa đến</option>
+                <option value="ARRIVED">Đã đến</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+                <option value="REJECTED">Đã từ chối</option>
+              </select>
+            </div>
+          </div>
+          <!-- Hàng 3: Nguồn / Từ ngày / Đến ngày -->
+          <div class="row g-2 mb-2">
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Nguồn</label>
+              <select class="form-select form-select-sm" id="srchSource">
+                <option value="">Tất cả nguồn</option>
+                <option value="DIRECT">Trực tiếp</option>
+                <option value="ONLINE">Đặt online</option>
+                <option value="PHONE">Điện thoại</option>
+                <option value="FACEBOOK">Facebook</option>
+                <option value="ZALO">Zalo</option>
+              </select>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Từ ngày</label>
+              <input type="date" class="form-control form-control-sm" id="srchDateFrom">
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+              <label class="form-label mb-1 search-form-label">Đến ngày</label>
+              <input type="date" class="form-control form-control-sm" id="srchDateTo">
+            </div>
+          </div>
+          <!-- Hàng 4: Nút hành động -->
+          <div class="row g-2 align-items-end">
+            <div class="col-12 d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary px-4 fw-semibold" id="btnResetSearch">
+                <i class="fas fa-undo me-1"></i>Đặt lại
+              </button>
+              <button type="button" class="btn btn-sm px-4 fw-semibold search-btn-primary" id="btnDoSearch">
+                <i class="fas fa-search me-1"></i>Tìm kiếm
+              </button>
+            </div>
+          </div>
+          <div class="alert alert-warning py-1 px-2 mt-2 mb-0 d-none search-warning" id="srchWarning">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            <span id="srchWarningText">Vui lòng nhập điều kiện tìm kiếm</span>
+          </div>
+        </div>
+
+        <!-- Vùng kết quả: chiếm phần còn lại, chỉ vùng này scroll -->
+        <div class="search-results-area">
+          <div id="srchResults">
+            <div class="text-center text-muted py-5" id="srchPlaceholder">
+              <i class="fas fa-search fa-2x mb-2 d-block opacity-25"></i>
+              Nhập điều kiện và bấm Tìm kiếm
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal (Create/Edit) -->
+<div class="modal fade" id="apptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable appt-modal-dialog">
+    <div class="modal-content appt-modal-content">
+      <div class="modal-header appt-modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-calendar-plus me-2"></i>
+          <span id="modalTitle">Tạo lịch hẹn</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="alert alert-danger d-none mx-3 mt-3 mb-0" id="modalError"></div>
+
+      {# HIDDEN STATE — dùng chung cho cả create và edit #}
+      <input type="hidden" id="apptId" />
+      <input type="hidden" id="selectedCustomerId" />
+
+      {# SHARED MODAL BODY — dùng cho cả CREATE và EDIT #}
+      <form id="apptForm" novalidate class="appt-form">
+
+        {# PANEL 1: Người đặt #}
+        <div class="appt-panel-booker">
+          <div class="booker-panel-header">
+            <span class="booker-panel-icon"><i class="fas fa-user"></i></span>
+            <span id="bookerPanelLabel">Người đặt lịch</span>
+          </div>
+          <div class="booker-grid">
+            <div>
+              <label>Họ tên <span class="required-field">*</span></label>
+              <input id="bookerName" placeholder="Họ tên người đặt" autocomplete="off" />
+            </div>
+            <div>
+              <label>SĐT <span class="required-field">*</span></label>
+              <input id="bookerPhone" placeholder="Số điện thoại" inputmode="numeric" autocomplete="off" />
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" id="bookerEmail" placeholder="Email" autocomplete="off" />
+            </div>
+            <div>
+              <label>Nguồn</label>
+              <select id="bookerSource">
+                <option value="DIRECT">Trực tiếp</option>
+                <option value="PHONE">Điện thoại</option>
+                <option value="FACEBOOK">Facebook</option>
+                <option value="ZALO">Zalo</option>
+                <option value="ONLINE">Online</option>
+              </select>
+            </div>
+            <div>
+              <label>Ghi chú lịch hẹn</label>
+              <input id="bookerNote" placeholder="Ghi chú riêng cho lần đặt này..." />
+            </div>
+            <div class="booker-date-field">
+              <label>Ngày hẹn <span class="required-field">*</span></label>
+              <input type="date" id="bookingDate" />
+            </div>
+          </div>
+        </div>
+
+        {# PANEL 2+3: Scroll area #}
+        <div class="appt-scroll-area">
+
+          {# Apply-all bar — hiện cả create lẫn edit mode #}
+          <div id="applyAllBar" class="create-only-bar">
+            <span class="create-only-label"><i class="fas fa-magic me-1"></i>Áp dụng tất cả:</span>
+            <select id="applyAllService" class="apply-all-select">
+              <option value="">-- Dịch vụ --</option>
+            </select>
+            <select id="applyAllVariant" disabled class="apply-all-select">
+              <option value="">-- Gói --</option>
+            </select>
+            <button type="button" id="btnApplyAll" class="btn-apply-all">
+              <i class="fas fa-check me-1"></i>Áp dụng
+            </button>
+            {# Thêm khách — CHỈ HIỆN Ở CREATE MODE #}
+            <div class="ms-auto d-flex align-items-center gap-8" id="createOnlyBar">
+              <button type="button" id="btnAddGuest" class="btn-add-guest">
+                <i class="fas fa-plus me-1"></i>Thêm khách
+              </button>
+            </div>
+          </div>
+
+          {# Bảng khách #}
+          <div class="guest-table-area">
+            {# Header cột — CSS Grid #}
+            <div id="guestTableHeader" class="gc-row-header">
+              <div class="guest-table-header-cell guest-table-header-cell-center">#</div>
+              <div class="guest-table-header-cell guest-table-header-cell-center">Phòng · Giờ</div>
+              <div class="guest-table-header-cell">Tên khách</div>
+              <div class="guest-table-header-cell">SĐT</div>
+              <div class="guest-table-header-cell">Dịch vụ</div>
+              <div class="guest-table-header-cell">Gói</div>
+              <div class="guest-table-header-cell guest-table-header-cell-center">Tác vụ</div>
+            </div>
+            {# Rows render bằng JS #}
+            <div id="guestList"></div>
+          </div>
+
+        </div>
+
+        <!-- Block trạng thái & thanh toán — dùng chung create/edit -->
+        <div id="sharedStatusBlock" class="shared-status-block">
+          <div class="status-block-title">
+            <i class="fas fa-sliders-h me-1 status-block-icon"></i>Trạng thái &amp; Thanh toán
+          </div>
+          <div class="status-form-row">
+
+            {# Trạng thái lịch hẹn — luôn editable #}
+            <div class="status-form-group">
+              <label class="status-label">Trạng thái</label>
+              <select id="sharedApptStatus" class="status-select">
+                <option value="NOT_ARRIVED" selected>Chưa đến</option>
+                <option value="ARRIVED">Đã đến</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </select>
+            </div>
+
+            {# sharedPayStatus: hidden — giá trị được cập nhật tự động qua invoice modal #}
+            <input type="hidden" id="sharedPayStatus" value="UNPAID">
+
+            {# Badge readonly — chỉ hiện ở EDIT MODE #}
+            <div class="status-form-group d-none" id="payStatusReadonlyWrap">
+              <label class="status-label">Thanh toán</label>
+              <span id="payStatusBadge" class="pay-status-badge pay-status-unpaid">Chưa thanh toán</span>
+            </div>
+
+            {# Nút mở Invoice Modal — chỉ hiện ở EDIT MODE #}
+            <div id="btnInvoiceWrap" class="status-form-group d-none">
+              <label class="status-label">&nbsp;</label>
+              <button type="button" id="btnOpenInvoice" class="btn-invoice-action">
+                <i class="fas fa-file-invoice-dollar me-1"></i>
+                <span id="btnInvoiceLabel">Thanh toán</span>
+              </button>
+            </div>
+
+            {# PAYMENT FIELDS đã chuyển sang Invoice Modal #}
+
+          </div>
+        </div>
+      </form>
+
+      <div class="modal-footer appt-modal-footer">
+        <button type="button" class="btn btn-outline-danger d-none" id="btnDelete">
+          <i class="fas fa-trash me-2"></i>Xóa
+        </button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>Hủy
+        </button>
+        <button type="button" class="btn btn-outline-primary d-none" id="btnRebook">
+          <i class="fas fa-redo me-2"></i>Đặt lại
+        </button>
+        <button type="button" class="btn btn-warning" id="btnSave">
+          <i class="fas fa-save me-2"></i><span id="btnSaveText">Lưu lịch hẹn</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- INVOICE MODAL — Popup hóa đơn chi tiết                     -->
+<!-- ============================================================ -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable invoice-modal-dialog">
+    <div class="modal-content invoice-modal-content">
+
+      <div class="modal-header invoice-modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-file-invoice-dollar me-2"></i>
+          <span id="invoiceModalTitle">Hóa đơn</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body invoice-modal-body">
+
+        <!-- Thông tin booking -->
+        <div class="invoice-info-row">
+          <div class="invoice-info-item">
+            <span class="invoice-info-lbl">Mã booking:</span>
+            <span id="invBookingCode" class="invoice-info-val fw-bold"></span>
+          </div>
+          <div class="invoice-info-item">
+            <span class="invoice-info-lbl">Người đặt:</span>
+            <span id="invBookerName" class="invoice-info-val"></span>
+          </div>
+          <div class="invoice-info-item">
+            <span class="invoice-info-lbl">SĐT:</span>
+            <span id="invBookerPhone" class="invoice-info-val"></span>
+          </div>
+        </div>
+
+        <!-- Bảng dịch vụ -->
+        <div class="invoice-table-wrap">
+          <table class="invoice-table">
+            <thead>
+              <tr>
+                <th>Khách</th>
+                <th>Dịch vụ</th>
+                <th>Gói / Thời lượng</th>
+                <th class="text-end">Đơn giá</th>
+                <th class="text-center">SL</th>
+                <th class="text-end">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody id="invLinesTbody">
+              <!-- render bằng JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Chiết khấu -->
+        <div class="invoice-discount-row">
+          <label class="invoice-discount-lbl">Chiết khấu:</label>
+          <div class="invoice-discount-inputs">
+            <input type="number" id="invDiscountValue" class="invoice-discount-input" placeholder="0" min="0" step="1000" />
+            <select id="invDiscountType" class="invoice-discount-type">
+              <option value="NONE">Không CK</option>
+              <option value="AMOUNT">VNĐ</option>
+              <option value="PERCENT">%</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tổng kết -->
+        <div class="invoice-totals">
+          <div class="invoice-total-row">
+            <span class="invoice-total-lbl">Tổng tạm tính:</span>
+            <span id="invSubtotal" class="invoice-total-val">0đ</span>
+          </div>
+          <div class="invoice-total-row">
+            <span class="invoice-total-lbl">Giảm giá:</span>
+            <span id="invDiscount" class="invoice-total-val invoice-discount-val">0đ</span>
+          </div>
+          <div class="invoice-total-row invoice-total-final">
+            <span class="invoice-total-lbl">Tổng cần thanh toán:</span>
+            <span id="invFinal" class="invoice-total-val">0đ</span>
+          </div>
+          <div class="invoice-total-row">
+            <span class="invoice-total-lbl">Đã thanh toán:</span>
+            <span id="invPaid" class="invoice-total-val invoice-paid-val">0đ</span>
+          </div>
+          <div class="invoice-total-row invoice-total-remaining">
+            <span class="invoice-total-lbl">Còn lại:</span>
+            <span id="invRemaining" class="invoice-total-val">0đ</span>
+          </div>
+        </div>
+
+        <!-- Nhập số tiền thu lần này (ẩn khi đã trả đủ) -->
+        <div id="invPayInputWrap" class="invoice-pay-input-wrap">
+          <div class="invoice-pay-row">
+            <div class="invoice-pay-field">
+              <label class="invoice-pay-lbl">Số tiền thu lần này <span class="required-field">*</span></label>
+              <input type="number" id="invPayAmount" class="invoice-pay-input" placeholder="0" min="0" step="1000" />
+            </div>
+            <div class="invoice-pay-field">
+              <label class="invoice-pay-lbl">Phương thức <span class="required-field">*</span></label>
+              <select id="invPayMethod" class="invoice-pay-select">
+                <option value="">-- Chọn --</option>
+                <option value="CASH">Tiền mặt</option>
+                <option value="CARD">Thẻ</option>
+                <option value="BANK_TRANSFER">Chuyển khoản</option>
+                <option value="E_WALLET">Ví điện tử</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-danger d-none mt-2 mb-0" id="invoiceModalError"></div>
+
+        <!-- Thông báo đã hoàn tiền (chỉ hiện khi status = REFUNDED) -->
+        <div id="invRefundedMsg" class="alert alert-warning mt-2 mb-0" style="display:none;">
+          <i class="fas fa-undo me-2"></i>Hóa đơn đã được hoàn tiền. Không thể thực hiện thêm giao dịch.
+        </div>
+
+      </div>
+
+      <div class="modal-footer invoice-modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Đóng
+        </button>
+        <button type="button" id="btnRefundPayment" class="btn btn-outline-danger invoice-refund-btn" style="display:none;">
+          <i class="fas fa-undo me-1"></i><span id="btnRefundPaymentLabel">Hoàn tiền</span>
+        </button>
+        <button type="button" id="btnConfirmPayment" class="btn btn-success invoice-pay-btn">
+          <i class="fas fa-check me-1"></i><span id="btnConfirmPaymentLabel">Xác nhận thanh toán</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận Từ chối yêu cầu đặt lịch -->
+<div class="modal fade reject-confirm-modal" id="rejectWebModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered reject-confirm-dialog">
+    <div class="modal-content reject-confirm-popup">
+      <div class="d-flex justify-content-center">
+        <div class="reject-confirm-icon" aria-hidden="true">!</div>
+      </div>
+      <h5 class="reject-confirm-title">Từ chối yêu cầu?</h5>
+      <p class="reject-confirm-desc" id="rejectWebInfo"></p>
+      <div class="reject-confirm-actions">
+        <button type="button" class="reject-cancel-btn" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="reject-confirm-btn" id="confirmRejectWebBtn">Từ chối</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận xóa lịch hẹn-->
+<div class="modal fade" id="deleteAppointmentModal" tabindex="-1" aria-labelledby="deleteAppointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered delete-modal-dialog">
+    <div class="modal-content border-0">
+
+
+      <div class="del-modal-body">
+        <div class="del-modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <div class="del-modal-title">Xóa lịch hẹn này?</div>
+        <div class="del-modal-info" id="deleteAppointmentInfo"></div>
+      </div>
+
+      <div class="del-modal-footer">
+        <button type="button" class="del-btn-cancel" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="del-btn-confirm" id="confirmDeleteAppointmentBtn">Xóa</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Pending Action Bar — hiện khi có block tạm chờ xác nhận -->
+<div id="pendingActionBar" role="status" aria-live="polite">
+  <div class="pending-bar-inner">
+    <span class="pb-count">
+      <i class="fas fa-calendar-check"></i>
+      <span id="pbCountLabel">0 khách đã chọn</span>
+      <span class="badge" id="pbCountBadge">0</span>
+    </span>
+    <button type="button" class="btn-bar-cancel" id="btnCancelPending">
+      <i class="fas fa-times me-1"></i>Hủy chọn
+    </button>
+    <button type="button" class="btn-bar-continue" id="btnContinuePending">
+      <i class="fas fa-arrow-right me-1"></i>Tiếp tục
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3 toast-container">
+  <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <i class="fas fa-check-circle me-2"></i>
+      <strong class="me-auto" id="toastTitle">Thông báo</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="toastBody">...</div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-appointments.js' %}?v={% now 'YmdHis' %}"></script>
+{% endblock %}

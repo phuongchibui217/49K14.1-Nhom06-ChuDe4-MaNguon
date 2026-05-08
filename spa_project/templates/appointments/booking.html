@@ -1,0 +1,407 @@
+{% extends 'spa/base.html' %}
+{% block title %}Đặt lịch hẹn - Spa ANA{% endblock %}
+
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/booking.css' %}?v={% now 'His' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1>Đặt Lịch Hẹn</h1>
+    <p class="subtitle">Chọn dịch vụ và thời gian phù hợp với bạn</p>
+  </div>
+</section>
+
+<div class="booking-wrap">
+
+  {% if form.non_field_errors %}
+  <div class="alert-danger-ana">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+  </div>
+  {% endif %}
+
+  {% if form.errors %}
+  <div class="alert-danger-ana">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>
+      Vui lòng kiểm tra lại thông tin:
+      {% for field in form %}{% for e in field.errors %}{{ field.label }}: {{ e }} {% endfor %}{% endfor %}
+    </span>
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'appointments:booking' %}" id="bookingForm" novalidate>
+    {% csrf_token %}
+    {# booker = người đang đăng nhập — hidden, không cho sửa #}
+    {{ form.booker_name }}
+    {{ form.booker_phone }}
+    <div class="booking-grid">
+
+      <!-- ═══ LEFT: Thông tin khách sử dụng dịch vụ ═══ -->
+      <div class="customer-sidebar">
+        <div class="bk-card">
+          <h4 class="bk-section-title">
+            <i class="fas fa-user"></i>
+            Thông tin khách sử dụng dịch vụ
+          </h4>
+          <div class="bk-field">
+            <label class="bk-label">Họ và tên <span class="req">*</span></label>
+            <input type="text"
+                   name="customer_name_snapshot"
+                   id="customerNameSnapshot"
+                   class="bk-input"
+                   value="{{ customer_profile.full_name }}"
+                   placeholder="Nhập họ và tên"
+                   required>
+          </div>
+
+          <div class="bk-field">
+            <label class="bk-label">Số điện thoại</label>
+            <input type="tel"
+                   name="customer_phone_snapshot"
+                   id="customerPhoneSnapshot"
+                   class="bk-input"
+                   value="{{ customer_profile.phone }}"
+                   placeholder="Nhập số điện thoại">
+          </div>
+
+          <div class="bk-field">
+            <label class="bk-label">Email</label>
+            <input type="email"
+                   name="customer_email_snapshot"
+                   id="customerEmailSnapshot"
+                   class="bk-input"
+                   value="{{ customer_profile.user.email }}"
+                   placeholder="Nhập email">
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ RIGHT: Dịch vụ + Ngày giờ + Ghi chú + Submit ═══ -->
+      <div class="booking-main">
+
+        <!-- Card: Dịch vụ & Thời gian -->
+        <div class="bk-card">
+          <h4 class="bk-section-title">
+            <i class="fas fa-spa"></i>
+            Dịch vụ &amp; Thời gian
+          </h4>
+
+          <div class="row g-3">
+            <!-- Cột trái: Chọn dịch vụ & gói -->
+            <div class="col-md-6">
+              <div class="bk-field">
+                <label class="bk-label" for="{{ form.service.id_for_label }}">
+                  Chọn dịch vụ <span class="req">*</span>
+                </label>
+                {{ form.service }}
+                <!-- thông báo lỗi của input này -->
+                {% for e in form.service.errors %}
+                  <div class="bk-error">{{ e }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="bk-field">
+                <label class="bk-label" for="{{ form.service_variant.id_for_label }}">
+                  Gói dịch vụ <span class="req">*</span>
+                </label>
+                {{ form.service_variant }}
+                {% for e in form.service_variant.errors %}
+                  <div class="bk-error">{{ e }}</div>
+                {% endfor %}
+              </div>
+
+              <!-- Service info -->
+              <div class="service-info-box">
+                <div class="service-info-item">
+                  <i class="far fa-clock"></i>
+                  <span>Thời lượng</span>
+                  <span class="value" id="serviceDuration">—</span>
+                </div>
+                <div class="service-info-item">
+                  <i class="fas fa-tag"></i>
+                  <span>Giá dự kiến</span>
+                  <span class="value" id="servicePrice">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cột phải: Ngày & giờ + Summary -->
+            <div class="col-md-6">
+              <div class="bk-field">
+                <label class="bk-label" for="{{ form.appointment_date.id_for_label }}">
+                  Ngày hẹn <span class="req">*</span>
+                </label>
+                {{ form.appointment_date }}
+                {% for e in form.appointment_date.errors %}
+                  <div class="bk-error">{{ e }}</div>
+                {% endfor %}
+              </div>
+
+              <div class="bk-field">
+                <label class="bk-label" for="{{ form.appointment_time.id_for_label }}">
+                  Giờ hẹn <span class="req">*</span>
+                </label>
+                {{ form.appointment_time }}
+                {% for e in form.appointment_time.errors %}
+                  <div class="bk-error">{{ e }}</div>
+                {% endfor %}
+                <p style="font-size:.75rem;color:var(--text-muted);margin-top:.4rem;">
+                  <i class="far fa-clock" style="margin-right:.25rem;"></i>
+                  Giờ làm việc: 9:00 - 21:00
+                </p>
+              </div>
+
+              <!-- Booking Summary (hiện khi đủ thông tin) -->
+              <!-- Ẩn box này có đến khi điền đầy đủ thông tin  -->
+              <div class="booking-summary" id="bookingSummary" style="display:none;">
+                <h5 class="bk-section-title">
+                  <i class="fas fa-clipboard-check"></i>
+                  Tóm tắt lịch hẹn
+                </h5>
+                <div class="summary-row">
+                  <span class="s-label">Dịch vụ</span>
+                  <span class="s-value" id="summaryService">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="s-label">Gói</span>
+                  <span class="s-value" id="summaryVariant">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="s-label">Ngày</span>
+                  <span class="s-value" id="summaryDate">—</span>
+                </div>
+                <div class="summary-row">
+                  <span class="s-label">Giờ</span>
+                  <span class="s-value" id="summaryTime">—</span>
+                </div>
+                <div class="summary-row total">
+                  <span class="s-label">Tổng tiền</span>
+                  <span class="s-value" id="summaryTotal">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Ghi chú -->
+        <div class="bk-card">
+          <h4 class="bk-section-title">
+            <i class="far fa-sticky-note"></i>
+            Ghi chú thêm
+          </h4>
+          {{ form.booker_notes }}
+          {% for e in form.booker_notes.errors %}
+            <div class="bk-error">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-book">
+          <i class="fas fa-calendar-check"></i>
+          <span>Xác nhận đặt lịch</span>
+        </button>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+/* Booking Page JS - Simple version */
+const servicesVariantsData = {{ services_variants_json|safe }};
+
+document.addEventListener('DOMContentLoaded', function () {
+  const dateInput = document.getElementById('{{ form.appointment_date.id_for_label }}');
+  const serviceSelect = document.getElementById('{{ form.service.id_for_label }}');
+  const variantSelect = document.getElementById('id_service_variant');
+  const durationSpan = document.getElementById('serviceDuration');
+  const priceSpan = document.getElementById('servicePrice');
+  const timeInput = document.getElementById('{{ form.appointment_time.id_for_label }}');
+
+  const summaryBox = document.getElementById('bookingSummary');
+  const sumService = document.getElementById('summaryService');
+  const sumVariant = document.getElementById('summaryVariant');
+  const sumDate = document.getElementById('summaryDate');
+  const sumTime = document.getElementById('summaryTime');
+  const sumTotal = document.getElementById('summaryTotal');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const serviceIdFromUrl = urlParams.get('service_id') || urlParams.get('service');
+  const variantIdFromUrl = urlParams.get('variant');
+
+  const SPA_CLOSE_HOUR = 21;
+  const DEFAULT_DURATION = 60;
+
+  // Set default date to today
+  if (dateInput) {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    dateInput.setAttribute('min', today);
+    dateInput.value = today;
+  }
+
+  if (serviceIdFromUrl && serviceSelect) {
+    serviceSelect.value = serviceIdFromUrl;
+  }
+
+  function updateVariants() {
+    if (!serviceSelect || !variantSelect) return;
+
+    const variants = servicesVariantsData[serviceSelect.value] || [];
+    variantSelect.innerHTML = '<option value="">— Chọn gói dịch vụ —</option>';
+
+    variants.forEach((v) => {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = v.label + ' — ' + v.price.toLocaleString('vi-VN') + ' VNĐ (' + v.duration_minutes + ' phút)';
+      opt.dataset.duration = v.duration_minutes;
+      opt.dataset.price = v.price;
+      opt.dataset.label = v.label;
+      variantSelect.appendChild(opt);
+    });
+
+    if (variantIdFromUrl) {
+      variantSelect.value = variantIdFromUrl;
+    } else if (variants.length === 1) {
+      variantSelect.value = variants[0].id;
+    }
+
+    updateServiceInfo();
+    updateSummary();
+  }
+
+  function getSelectedDuration() {
+    if (!variantSelect) return DEFAULT_DURATION;
+    const opt = variantSelect.options[variantSelect.selectedIndex];
+    return (opt && opt.value && opt.dataset.duration)
+      ? parseInt(opt.dataset.duration)
+      : DEFAULT_DURATION;
+  }
+
+  function validateEndTime() {
+    if (!timeInput || !timeInput.value) return;
+
+    const [h, m] = timeInput.value.split(':').map(Number);
+    const duration = getSelectedDuration();
+    const startMins = h * 60 + m;
+    const endMins = startMins + duration;
+    const closeMins = SPA_CLOSE_HOUR * 60;
+
+    const latestStartMins = closeMins - duration;
+    const latestH = Math.floor(latestStartMins / 60);
+    const latestM = latestStartMins % 60;
+    const latestStr = `${String(latestH).padStart(2,'0')}:${String(latestM).padStart(2,'0')}`;
+
+    timeInput.setAttribute('max', latestStr);
+
+    let errEl = document.getElementById('timeEndError');
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = 'timeEndError';
+      errEl.className = 'bk-error';
+      errEl.style.display = 'none';
+      timeInput.parentNode.appendChild(errEl);
+    }
+
+    if (endMins > closeMins) {
+      errEl.textContent = `Spa đóng cửa lúc 21:00. Với gói ${duration} phút, giờ bắt đầu trễ nhất là ${latestStr}.`;
+      errEl.style.display = 'block';
+      return false;
+    } else {
+      errEl.style.display = 'none';
+      return true;
+    }
+  }
+
+  function updateServiceInfo() {
+    if (!variantSelect) return;
+    const opt = variantSelect?.options[variantSelect.selectedIndex];
+
+    if (opt?.value) {
+      durationSpan.textContent = opt.dataset.duration + ' phút';
+      priceSpan.textContent = parseFloat(opt.dataset.price).toLocaleString('vi-VN') + ' VNĐ';
+    } else {
+      durationSpan.textContent = '—';
+      priceSpan.textContent = '—';
+    }
+  }
+
+  function updateSummary() {
+    if (!summaryBox) return;
+
+    const svcOpt = serviceSelect?.options[serviceSelect.selectedIndex];
+    const varOpt = variantSelect?.options[variantSelect.selectedIndex];
+    const dateVal = dateInput?.value || '';
+    const timeVal = timeInput?.value || '';
+
+    if (svcOpt?.value && varOpt?.value && dateVal && timeVal) 
+    {
+      summaryBox.style.display = 'block';
+      sumService.textContent = svcOpt.textContent;
+      sumVariant.textContent = varOpt.dataset.label || varOpt.textContent.split('—')[0].trim();
+
+      const d = new Date(dateVal + 'T00:00:00');
+      sumDate.textContent = d.toLocaleDateString('vi-VN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      sumTime.textContent = timeVal;
+      sumTotal.textContent = parseFloat(varOpt.dataset.price).toLocaleString('vi-VN') + ' VNĐ';
+    }
+    else
+    {
+      summaryBox.style.display = 'none';
+    }
+  }
+
+  if (serviceSelect) {
+    serviceSelect.addEventListener('change', updateVariants);
+    setTimeout(updateVariants, 50);
+  }
+
+  if (variantSelect) {
+    variantSelect.addEventListener('change', function () {
+      updateServiceInfo();
+      updateSummary();
+      validateEndTime();
+    });
+  }
+
+  if (dateInput) {
+    dateInput.addEventListener('change', updateSummary);
+  }
+
+  if (timeInput) {
+    timeInput.setAttribute('min', '09:00');
+    timeInput.setAttribute('max', '21:00');
+    timeInput.addEventListener('change', function() {
+      updateSummary();
+      validateEndTime();
+    });
+  }
+
+  const bookingForm = timeInput ? timeInput.closest('form') : null;
+  if (bookingForm) {
+    bookingForm.addEventListener('submit', function(e) {
+      if (!validateEndTime()) {
+        e.preventDefault();
+        timeInput.focus();
+      }
+    });
+  }
+
+  setTimeout(updateSummary, 100);
+  setTimeout(validateEndTime, 150);
+});
+</script>
+{% endblock %}

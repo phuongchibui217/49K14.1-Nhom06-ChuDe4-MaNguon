@@ -1,0 +1,115 @@
+{% extends "manage/base.html" %}
+{% load static %}
+
+{% block title %}Chat trực tuyến - Spa ANA{% endblock %}
+
+{% block extra_css %}
+{% now "YmdHis" as admin_chat_css_version %}
+<link rel="stylesheet" href="{% static 'css/admin-chat.css' %}?v={{ admin_chat_css_version }}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-chat-page admin-chat-page--balanced" id="adminChatApp">
+    <div class="admin-chat-shell">
+        <aside class="admin-chat-sidebar">
+            <div class="admin-chat-sidebar-header">
+                <div>
+                    <p class="admin-chat-eyebrow">Live Support</p>
+                    <h2 class="admin-chat-title">Phiên chat khách hàng</h2>
+                </div>
+                <span class="admin-chat-total" id="adminChatUnreadTotal">0 chưa đọc</span>
+            </div>
+
+            <div class="admin-chat-sidebar-tools">
+                <div class="admin-chat-search">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="adminChatSearch"
+                        placeholder="Tìm theo mã chat, tên, SĐT..."
+                    >
+                </div>
+            </div>
+
+            <div class="admin-chat-session-list" id="adminChatSessionList">
+                <div class="admin-chat-list-empty">
+                    <i class="fas fa-comments"></i>
+                    <p>Đang tải danh sách chat...</p>
+                </div>
+            </div>
+        </aside>
+
+        <section class="admin-chat-main">
+            <div class="admin-chat-empty" id="adminChatEmptyState">
+                <div class="admin-chat-empty-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+                <h3>Chọn một phiên chat để bắt đầu</h3>
+                <p>Danh sách bên trái sẽ tự cập nhật khi có khách hàng gửi tin nhắn mới.</p>
+            </div>
+
+            <div class="admin-chat-panel d-none" id="adminChatPanel">
+                <header class="admin-chat-panel-header">
+                    <div>
+                        <h3 id="adminChatSessionName">Khách hàng</h3>
+                        <div class="admin-chat-meta-row">
+                            <span class="admin-chat-code" id="adminChatSessionCode">CHAT...</span>
+                            <span class="admin-chat-contact" id="adminChatSessionContact"></span>
+                            <span class="admin-chat-status" id="adminChatSessionStatus">Đang mở</span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="admin-chat-messages" id="adminChatMessages"></div>
+
+                <footer class="admin-chat-composer">
+                    <div class="admin-chat-selected-file d-none" id="adminChatSelectedFile">
+                        <div class="admin-chat-selected-file-info">
+                            <i class="fas fa-paperclip"></i>
+                            <span id="adminChatSelectedFileName"></span>
+                        </div>
+                        <button type="button" class="admin-chat-remove-file" id="adminChatRemoveFile">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="admin-chat-error d-none" id="adminChatErrorMessage">
+                        Không thể gửi tin nhắn. Vui lòng thử lại sau
+                    </div>
+
+                    <form id="adminChatComposerForm" class="admin-chat-composer-form">
+                        <input type="file" id="adminChatAttachmentInput" accept="{{ chat_attachment_accept }}" hidden>
+
+                        <button type="button" class="admin-chat-attach-btn" id="adminChatAttachBtn" title="Đính kèm file hoặc hình ảnh">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+
+                        <textarea
+                            id="adminChatInput"
+                            rows="1"
+                            placeholder="Nhập tin nhắn cho khách hàng..."
+                        ></textarea>
+
+                        <button type="submit" class="admin-chat-send-btn" id="adminChatSendBtn" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Gửi</span>
+                        </button>
+                    </form>
+                </footer>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+window.adminChatConfig = {
+    sessionsSocketPath: "/ws/admin/chat/sessions/",
+    messageSocketPathTemplate: "/ws/admin/chat/sessions/__CHAT_CODE__/",
+    sendErrorMessage: "Không thể gửi tin nhắn. Vui lòng thử lại sau",
+    connectionErrorMessage: "Không thể kết nối chat. Vui lòng thử lại.",
+    maxAttachmentSize: 10485760
+};
+</script>
+{% now "YmdHis" as admin_chat_js_version %}
+<script src="{% static 'js/admin-chat.js' %}?v={{ admin_chat_js_version }}"></script>
+{% endblock %}

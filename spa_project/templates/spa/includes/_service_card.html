@@ -1,0 +1,85 @@
+{# ────────────────────────────────────────────────────────────── #}
+{# SERVICE CARD COMPONENT - Card hiển thị một dịch vụ #}
+{# Input: service object với các annotated fields #}
+{# ────────────────────────────────────────────────────────────── #}
+
+{% load spa_filters %}
+
+{# ────────────────────────────────────────────────────────────── #}
+{# CARD CONTAINER - Clickable card (redirect to detail page) #}
+{# ────────────────────────────────────────────────────────────── #}
+<div class="sl-card" onclick="window.location='{% url 'spa_services:service_detail' service.id %}'"
+  style="cursor:pointer">
+
+  {# ────────────────────────────────────────────────────────────── #}
+  {# IMAGE SECTION - Hình ảnh, badges (category, duration) #}
+  {# ────────────────────────────────────────────────────────────── #}
+  <div class="sl-card__img-wrap">
+    {# Category badge - Góc trái trên #}
+    <span class="sl-card__cat">{{ service.category.name }}</span>
+
+    {# Service image - Lazy loading cho performance #}
+    <img class="sl-card__img" src="{{ service.get_image_url }}" alt="{{ service.name }}" loading="lazy">
+
+    {# Duration badge - Góc phải dưới (nếu có variants) #}
+    {% if service.min_duration %}
+    <span class="sl-card__duration">
+      {% if service.min_duration == service.max_duration %}
+      {{ service.min_duration }} phút
+      {% else %}
+      {{ service.min_duration }}–{{ service.max_duration }} phút
+      {% endif %}
+    </span>
+    {% endif %}
+  </div>
+
+  {# ────────────────────────────────────────────────────────────── #}
+  {# BODY SECTION - Tên, mô tả, meta info #}
+  {# ────────────────────────────────────────────────────────────── #}
+  <div class="sl-card__body">
+    {# Service name #}
+    <h3 class="sl-card__name">{{ service.name }}</h3>
+
+    {# Description - Ưu tiên short_description, fallback về description #}
+    <p class="sl-card__desc">{{ service.short_description|default:service.description }}</p>
+
+    {# Variant count - Số lượng gói dịch vụ (nếu có) #}
+    {% if service.variant_count %}
+    <p class="sl-card__meta">
+      <i class="fas fa-layer-group"></i>
+      {{ service.variant_count }} gói dịch vụ
+    </p>
+    {% endif %}
+
+    {# ────────────────────────────────────────────────────────────── #}
+    {# FOOTER SECTION - Giá tiền + CTA button #}
+    {# ────────────────────────────────────────────────────────────── #}
+    <div class="sl-card__footer">
+      {# Price display - Range pricing (min → max) #}
+      <div class="sl-card__price">
+        {% if service.min_price %}
+        <span class="sl-card__price-label">Từ</span>
+        {# Nếu min = max: chỉ hiển thị 1 giá #}
+        {% if service.min_price == service.max_price %}
+        {{ service.min_price|vnd }}
+        {# Nếu min ≠ max: hiển thị range #}
+        {% else %}
+        {{ service.min_price|vnd }} – {{ service.max_price|vnd }}
+        {% endif %}
+        {# Không có giá: hiển thị "Liên hệ" #}
+        {% else %}
+        Liên hệ
+        {% endif %}
+      </div>
+
+      {# CTA button - Link đến trang chi tiết #}
+      <a href="{% url 'spa_services:service_detail' service.id %}" class="sl-card__cta">
+        Xem chi tiết <i class="fas fa-arrow-right" style="font-size:.65rem;"></i>
+      </a>
+    </div>
+  </div>
+
+  {# ────────────────────────────────────────────────────────────── #}
+  {# END: Service Card Component #}
+  {# ────────────────────────────────────────────────────────────── #}
+</div>

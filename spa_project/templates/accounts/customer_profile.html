@@ -1,0 +1,479 @@
+{% extends 'spa/base.html' %}
+{% block title %}Tài khoản cá nhân — Spa ANA{% endblock %}
+{% block messages %}{% endblock %}
+
+{% block extra_css %}
+<style>
+
+/* ── PAGE HEADER — dung global style.css, khong override ── */
+/* Chi them margin-bottom de tao khoang cach xuong content */
+.page-header { margin-bottom: 2.5rem; }
+
+/* ── WRAP ────────────────────────────────────────── */
+.cp-wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+  font-family: var(--font-ui);
+}
+
+/* ── PROFILE ROW ─────────────────────────────────── */
+.cp-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 40px;
+  padding: 28px 32px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+.cp-avatar {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--gold-muted);
+  border: 2px solid var(--gold-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; font-weight: 700;
+  flex-shrink: 0;
+  color: var(--gold-hover);
+}
+.cp-profile-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 5px;
+}
+.cp-profile-meta {
+  font-size: .85rem;
+  color: #6b7280;
+  display: flex; flex-wrap: wrap; gap: 14px;
+}
+.cp-profile-meta span { display: flex; align-items: center; gap: 5px; }
+
+/* ── SECTION LABEL ───────────────────────────────── */
+.cp-section-label {
+  font-size: .7rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--gold-light);
+  display: flex; align-items: center; gap: 6px;
+}
+.cp-section-label i { color: var(--gold); font-size: .8rem; }
+
+/* ── INFO GRID (view mode) ───────────────────────── */
+.cp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  max-width: 1000px;
+  margin: 0 auto 28px auto;
+}
+.profile-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background: rgba(249, 250, 251, 0.5);
+  border-radius: 6px;
+}
+.profile-item .label {
+  font-size: .75rem;
+  color: #888;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.profile-item .value {
+  font-size: .95rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+}
+.profile-item .value.empty {
+  color: #aaa;
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* ── EDIT BUTTON ─────────────────────────────────── */
+.btn-cp-edit {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  color: #92703a;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  cursor: pointer;
+  transition: background .18s;
+  font-family: var(--font-ui);
+}
+.btn-cp-edit:hover { background: #fdf8ef; }
+.btn-cp-edit i { font-size: .7rem; }
+
+/* ── CARD WRAPPER ────────────────────────────────── */
+.cp-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 20px;
+}
+
+/* ── FORM ────────────────────────────────────────── */
+.cp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.cp-form-full { grid-column: 1 / -1; }
+
+.cp-label {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.cp-input,
+.cp-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-family: var(--font-ui);
+  color: #111827;
+  background: #fff;
+  transition: border-color .18s, box-shadow .18s;
+  outline: none;
+  appearance: none;
+}
+.cp-input:focus,
+.cp-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,169,110,.12);
+}
+.cp-input.err, .cp-select.err { border-color: #ef4444; }
+.cp-field-err {
+  font-size: .75rem;
+  color: #ef4444;
+  margin-top: 5px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ── FORM ACTIONS ────────────────────────────────── */
+.cp-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 24px; padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+.btn-cp-cancel {
+  padding: 9px 22px;
+  border-radius: 999px;
+  border: 1.5px solid #e5e7eb;
+  background: transparent;
+  color: #6b7280;
+  font-size: .82rem; font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: border-color .18s, color .18s;
+}
+.btn-cp-cancel:hover { border-color: #9ca3af; color: #374151; }
+.btn-cp-save {
+  padding: 9px 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--gold);
+  color: #fff;
+  font-size: .82rem; font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  letter-spacing: .03em;
+  transition: background .18s, box-shadow .18s;
+}
+.btn-cp-save:hover { background: var(--gold-hover); box-shadow: 0 4px 14px rgba(201,169,110,.35); }
+
+/* ── PW WRAPPER ──────────────────────────────────── */
+.cp-pw-wrap { position: relative; }
+.cp-pw-wrap .cp-input { padding-right: 42px; }
+.cp-pw-toggle {
+  position: absolute;
+  right: 13px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  cursor: pointer; padding: 0;
+  color: #9ca3af;
+  display: flex; align-items: center;
+  transition: color .18s;
+}
+.cp-pw-toggle:hover { color: #374151; }
+.cp-pw-toggle svg { width: 17px; height: 17px; display: block; }
+
+/* ── TOAST ───────────────────────────────────────── */
+.cp-toast-wrap {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.cp-toast {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  border-left: 3px solid var(--gold);
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 260px;
+  animation: cpUp .25s ease;
+  pointer-events: auto;
+}
+.cp-toast.err { border-left-color: #ef4444; }
+.cp-toast-icon { font-size: .95rem; }
+.cp-toast:not(.err) .cp-toast-icon { color: var(--gold); }
+.cp-toast.err .cp-toast-icon { color: #ef4444; }
+.cp-toast-text { font-size: .85rem; font-weight: 600; color: #111827; }
+@keyframes cpUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .cp-profile-row { flex-direction: column; text-align: center; padding: 20px; }
+  .cp-profile-meta { justify-content: center; }
+  .cp-info-grid { grid-template-columns: 1fr; gap: 18px; }
+  .cp-form-grid { grid-template-columns: 1fr; }
+  .cp-form-full { grid-column: auto; }
+  .cp-card { padding: 20px; }
+  .cp-actions { flex-direction: column-reverse; }
+  .btn-cp-cancel, .btn-cp-save { width: 100%; text-align: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cp-toast-wrap">
+{% if messages %}{% for message in messages %}
+  <div class="cp-toast {% if message.tags == 'error' %}err{% endif %}">
+    <span class="cp-toast-icon">{% if message.tags == 'error' %}<i class="fas fa-times-circle"></i>{% else %}<i class="fas fa-check-circle"></i>{% endif %}</span>
+    <span class="cp-toast-text">{{ message }}</span>
+  </div>
+{% endfor %}{% endif %}
+</div>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1>Tài khoản cá nhân</h1>
+    <p class="subtitle">Quản lý thông tin và bảo mật tài khoản của bạn</p>
+  </div>
+</div>
+
+<div class="cp-wrap">
+
+  <!-- Profile row -->
+  <div class="cp-profile-row">
+    <div class="cp-avatar">{{ customer_profile.full_name|slice:":1"|upper|default:request.user.username|slice:":1"|upper }}</div>
+    <div>
+      <div class="cp-profile-name">{{ customer_profile.full_name|default:request.user.username }}</div>
+      <div class="cp-profile-meta">
+        <span><i class="fas fa-phone"></i>{{ customer_profile.phone }}</span>
+        {% if request.user.email %}<span><i class="fas fa-envelope"></i>{{ request.user.email }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Thong tin ca nhan -->
+  <div class="cp-card">
+    <div class="cp-section-label"><i class="fas fa-id-card"></i>Thông tin cá nhân</div>
+
+    <div id="cp-view" {% if edit_mode %}style="display:none"{% endif %}>
+      <div class="cp-info-grid">
+        <div class="profile-item">
+          <div class="label">Tên đăng nhập</div>
+          <div class="value">{{ request.user.username }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Họ và tên</div>
+          <div class="value {% if not customer_profile.full_name %}empty{% endif %}">{{ customer_profile.full_name|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Số điện thoại</div>
+          <div class="value">{{ customer_profile.phone }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Email</div>
+          <div class="value {% if not request.user.email %}empty{% endif %}">{{ request.user.email|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Giới tính</div>
+          <div class="value {% if not customer_profile.get_gender_display %}empty{% endif %}">{{ customer_profile.get_gender_display|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Ngày sinh</div>
+          <div class="value {% if not customer_profile.dob %}empty{% endif %}">{{ customer_profile.dob|date:"d/m/Y"|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Địa chỉ</div>
+          <div class="value {% if not customer_profile.address %}empty{% endif %}">{{ customer_profile.address|default:"Chưa cập nhật" }}</div>
+        </div>
+        <div class="profile-item">
+          <div class="label">Ngày tham gia</div>
+          <div class="value">{{ request.user.date_joined|date:"d/m/Y" }}</div>
+        </div>
+      </div>
+      <button type="button" class="btn-cp-edit" id="btn-open-edit"><i class="fas fa-pen"></i> Chỉnh sửa thông tin</button>
+    </div>
+
+    <div id="cp-edit" {% if not edit_mode %}style="display:none"{% endif %}>
+      <form method="post" action="{% url 'customers:customer_profile' %}" novalidate>
+        {% csrf_token %}<input type="hidden" name="action" value="update_profile">
+        <div class="cp-form-grid">
+          <div>
+            <label class="cp-label">Tên đăng nhập <span style="color:#ef4444">*</span></label>
+            {{ profile_form.username }}
+            {% for e in profile_form.username.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+          <div>
+            <label class="cp-label">Họ và tên <span style="color:#ef4444">*</span></label>
+            {{ profile_form.full_name }}
+            {% for e in profile_form.full_name.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+          <div>
+            <label class="cp-label">Số điện thoại <span style="color:#ef4444">*</span></label>
+            {{ profile_form.phone }}
+            {% for e in profile_form.phone.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+          <div>
+            <label class="cp-label">Email</label>
+            {{ profile_form.email }}
+            {% for e in profile_form.email.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+          <div>
+            <label class="cp-label">Giới tính</label>
+            {{ profile_form.gender }}
+          </div>
+          <div>
+            <label class="cp-label">Ngày sinh</label>
+            {{ profile_form.dob }}
+            {% for e in profile_form.dob.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+          <div></div>
+          <div class="cp-form-full">
+            <label class="cp-label">Địa chỉ</label>
+            {{ profile_form.address }}
+            {% for e in profile_form.address.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+        <div class="cp-actions">
+          <button type="button" class="btn-cp-cancel" id="btn-cancel-edit">Hủy</button>
+          <button type="submit" class="btn-cp-save">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Bao mat -->
+  <div class="cp-card">
+    <div class="cp-section-label"><i class="fas fa-lock"></i>Bảo mật</div>
+
+    {% if password_form.non_field_errors %}
+    <div style="font-size:.82rem;color:#ef4444;margin-bottom:14px;font-weight:600;">{% for e in password_form.non_field_errors %}{{ e }}{% endfor %}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'customers:customer_profile' %}" novalidate>
+      {% csrf_token %}<input type="hidden" name="action" value="change_password">
+      <div class="cp-form-grid">
+        <div class="cp-form-full">
+          <label class="cp-label">Mật khẩu hiện tại <span style="color:#ef4444">*</span></label>
+          <div class="cp-pw-wrap">
+            {{ password_form.current_password }}
+            <button class="cp-pw-toggle" type="button">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          {% for e in password_form.current_password.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+        </div>
+        <div>
+          <label class="cp-label">Mật khẩu mới <span style="color:#ef4444">*</span></label>
+          <div class="cp-pw-wrap">
+            {{ password_form.new_password }}
+            <button class="cp-pw-toggle" type="button">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          {% for e in password_form.new_password.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+        </div>
+        <div>
+          <label class="cp-label">Xác nhận mật khẩu mới <span style="color:#ef4444">*</span></label>
+          <div class="cp-pw-wrap">
+            {{ password_form.confirm_password }}
+            <button class="cp-pw-toggle" type="button">
+              <span class="icon-eye"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span>
+              <span class="icon-eye-off" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg></span>
+            </button>
+          </div>
+          {% for e in password_form.confirm_password.errors %}<div class="cp-field-err"><i class="fas fa-exclamation-circle"></i>{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="cp-actions"><button type="submit" class="btn-cp-save">Đổi mật khẩu</button></div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  // View / Edit toggle
+  var vw = document.getElementById('cp-view');
+  var ed = document.getElementById('cp-edit');
+  var btnO = document.getElementById('btn-open-edit');
+  var btnC = document.getElementById('btn-cancel-edit');
+  if (btnO) btnO.addEventListener('click', function () { vw.style.display = 'none'; ed.style.display = ''; });
+  if (btnC) btnC.addEventListener('click', function () { ed.style.display = 'none'; vw.style.display = ''; });
+
+  // Apply cp-input / cp-select to Django-rendered fields
+  document.querySelectorAll('.cp-form-grid input, .cp-form-grid select, .cp-pw-wrap input').forEach(function (el) {
+    if (el.tagName === 'SELECT') el.classList.add('cp-select');
+    else el.classList.add('cp-input');
+  });
+
+  // Password show/hide
+  document.querySelectorAll('.cp-pw-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = btn.closest('.cp-pw-wrap').querySelector('input');
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.querySelector('.icon-eye').style.display     = show ? 'none' : '';
+      btn.querySelector('.icon-eye-off').style.display = show ? ''     : 'none';
+    });
+  });
+
+  // Auto-dismiss toasts
+  document.querySelectorAll('.cp-toast').forEach(function (t) {
+    setTimeout(function () {
+      t.style.transition = 'opacity .3s';
+      t.style.opacity = '0';
+      setTimeout(function () { t.remove(); }, 320);
+    }, 4000);
+  });
+}());
+</script>
+{% endblock %}

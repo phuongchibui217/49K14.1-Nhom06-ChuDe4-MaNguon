@@ -1,0 +1,616 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Đăng nhập Admin | Spa ANA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Font Awesome -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary-blue: #1f3b5c;
+      --gold: #e1b84f;
+      --gold-dark: #c9a63a;
+      --text-dark: #1a1a1a;
+      --bg-blue: linear-gradient(135deg, #1f3b5c, #2e557f);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-container {
+      width: 420px;
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 35px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .login-icon {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 15px;
+      background: radial-gradient(#fff, #fff8e1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(225, 184, 79, 0.35);
+    }
+
+    .login-icon i {
+      font-size: 40px;
+      color: var(--gold);
+    }
+
+    .login-header h2 {
+      margin: 0;
+      color: var(--primary-blue);
+      font-weight: 700;
+    }
+
+    .login-header p {
+      margin-top: 6px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--primary-blue);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      color: var(--gold);
+      font-size: 15px;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      border-radius: 10px;
+      border: 1.8px solid #e5e7eb;
+      outline: none;
+      transition: 0.3s;
+      font-size: 14px;
+    }
+
+    .input-wrapper input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(225, 184, 79, 0.25);
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 22px;
+      color: #4b5563;
+    }
+
+    .options a {
+      text-decoration: none;
+      color: var(--primary-blue);
+      font-weight: 600;
+    }
+
+    .options a:hover {
+      text-decoration: underline;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.3s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(225, 184, 79, 0.45);
+    }
+
+    .back-home {
+      text-align: center;
+      margin-top: 22px;
+    }
+
+    .back-home a {
+      text-decoration: none;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .back-home a:hover {
+      color: var(--primary-blue);
+    }
+
+    /* Alert Messages */
+    .alert-message {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      font-size: 14px;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    .alert-message.show {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      border-left: 4px solid #dc3545;
+      color: #991b1b;
+    }
+
+    .alert-success {
+      background: #dcfce7;
+      border-left: 4px solid #22c55e;
+      color: #166534;
+    }
+
+    /* Django form errors */
+    .errorlist {
+      list-style: none;
+      padding: 0;
+      margin: 5px 0 0 0;
+      color: #dc3545;
+      font-size: 13px;
+    }
+
+    .errorlist li {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .errorlist li::before {
+      content: '\f06a';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 35px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 420px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .modal-header h3 {
+      margin: 0 0 8px;
+      color: var(--primary-blue);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .modal-header p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #6b7280;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .close-modal:hover {
+      color: var(--primary-blue);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 8px;
+      transition: 0.3s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(225, 184, 79, 0.45);
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      margin-top: 10px;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+      box-shadow: 0 10px 25px rgba(107, 114, 128, 0.45);
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ffffff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-submit.loading .spinner {
+      display: inline-block;
+    }
+
+    .btn-submit.loading .btn-text {
+      display: none;
+    }
+
+    .form-control.is-invalid {
+      border-color: #dc3545;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-icon">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <h2>Đăng nhập Admin</h2>
+      <p>Hệ thống quản lý Spa ANA</p>
+    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert-message alert-{{ message.tags }} show">
+          <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Django Form Error Alert -->
+    <div id="loginAlert" class="alert-message"></div>
+
+    <form method="post" id="loginForm" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Tên đăng nhập</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-user"></i>
+          {{ form.username }}
+        </div>
+        {% if form.username.errors %}
+          <ul class="errorlist">
+            {% for error in form.username.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password.id_for_label }}">Mật khẩu</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-lock"></i>
+          {{ form.password }}
+        </div>
+        {% if form.password.errors %}
+          <ul class="errorlist">
+            {% for error in form.password.errors %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="options">
+        <label>
+          {{ form.remember_me }} Ghi nhớ đăng nhập
+        </label>
+        <a href="#" id="forgotPasswordLink">Quên mật khẩu?</a>
+      </div>
+
+      <button type="submit" class="login-btn" id="loginBtn">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span class="btn-text">Đăng nhập</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <div class="back-home">
+      <a href="{% url 'pages:home' %}">
+        <i class="fa-solid fa-arrow-left"></i>
+        Quay lại trang chủ
+      </a>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal-overlay" id="forgotPasswordModal">
+    <div class="modal-content" style="position: relative;">
+      <button class="close-modal" id="closeModal">&times;</button>
+
+      <div class="modal-header">
+        <h3>Quên mật khẩu?</h3>
+        <p>Nhập email để nhận link đặt lại mật khẩu</p>
+      </div>
+
+      <!-- Alert Message -->
+      <div id="modalAlert" class="alert-message"></div>
+
+      <form id="forgotPasswordForm">
+        <div class="form-group">
+          <label>Email đăng ký</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-envelope"></i>
+            <input
+              type="email"
+              id="resetEmail"
+              placeholder="Nhập email của bạn"
+              required
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitReset">
+          <span class="btn-text">Gửi link đặt lại</span>
+          <div class="spinner"></div>
+        </button>
+
+        <button type="button" class="btn-submit btn-secondary" id="cancelReset">
+          Hủy bỏ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginAlert = document.getElementById('loginAlert');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const cancelResetBtn = document.getElementById('cancelReset');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const submitResetBtn = document.getElementById('submitReset');
+    const resetEmailInput = document.getElementById('resetEmail');
+    const modalAlert = document.getElementById('modalAlert');
+
+    // Show Alert Message
+    function showAlert(element, message, type = 'error') {
+      element.className = `alert-message alert-${type} show`;
+      element.innerHTML = `
+        <i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i>
+        <span>${message}</span>
+      `;
+
+      // Auto hide after 5 seconds
+      setTimeout(() => {
+        element.classList.remove('show');
+      }, 5000);
+    }
+
+    // Hide Alert Message
+    function hideAlert(element) {
+      element.classList.remove('show');
+    }
+
+    // Handle Login Form Submit - Show loading state
+    loginForm.addEventListener('submit', function(e) {
+      // Show loading state
+      loginBtn.classList.add('loading');
+      loginBtn.disabled = true;
+    });
+
+    // Open Forgot Password Modal
+    forgotPasswordLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      forgotPasswordModal.classList.add('show');
+      resetEmailInput.focus();
+    });
+
+    // Close Modal Functions
+    function closeModal() {
+      forgotPasswordModal.classList.remove('show');
+      hideAlert(modalAlert);
+      forgotPasswordForm.reset();
+      submitResetBtn.classList.remove('loading');
+      submitResetBtn.disabled = false;
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelResetBtn.addEventListener('click', closeModal);
+
+    // Close modal when clicking outside
+    forgotPasswordModal.addEventListener('click', function(e) {
+      if (e.target === forgotPasswordModal) {
+        closeModal();
+      }
+    });
+
+    // Handle Forgot Password Form Submit
+    forgotPasswordForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const email = resetEmailInput.value.trim();
+
+      // Hide previous alert
+      hideAlert(modalAlert);
+
+      // Validate email
+      if (!email) {
+        showAlert(modalAlert, 'Vui lòng nhập email!', 'error');
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showAlert(modalAlert, 'Email không hợp lệ!', 'error');
+        return;
+      }
+
+      // Show loading state
+      submitResetBtn.classList.add('loading');
+      submitResetBtn.disabled = true;
+
+      // TODO: Replace with actual API call to Django backend
+      // For now, simulate API call
+      setTimeout(function() {
+        showAlert(
+          modalAlert,
+          `Nếu email tồn tại, link đặt lại mật khẩu sẽ được gửi đến ${email}.`,
+          'success'
+        );
+
+        submitResetBtn.classList.remove('loading');
+        submitResetBtn.disabled = false;
+
+        // Close modal after 3 seconds
+        setTimeout(() => {
+          closeModal();
+        }, 3000);
+      }, 1500);
+    });
+
+    // Focus on username field on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const usernameInput = document.getElementById('id_username');
+      if (usernameInput) {
+        usernameInput.focus();
+      }
+    });
+
+    // Handle Escape key to close modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && forgotPasswordModal.classList.contains('show')) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

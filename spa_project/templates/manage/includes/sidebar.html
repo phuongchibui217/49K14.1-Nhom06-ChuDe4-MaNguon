@@ -1,0 +1,91 @@
+{% load static %}
+<!-- Admin Sidebar -->
+<nav class="admin-sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <i class="fas fa-spa fa-2x mb-2" style="color: #E0B21B;"></i>
+        <h3>Spa <span>ANA</span></h3>
+    </div>
+    
+    <ul class="nav flex-column sidebar-nav">
+        {% if request.user.is_superuser %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_reports' %}active{% endif %}" href="{% url 'reports:admin_reports' %}">
+                <i class="fas fa-chart-bar"></i>
+                Báo cáo thống kê
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_appointments' %}active{% endif %}" href="{% url 'appointments:admin_appointments' %}">
+                <i class="fas fa-calendar-check"></i>
+                <span class="sidebar-link-label">Quản lý lịch hẹn</span>
+                <span class="sidebar-booking-badge d-none" id="adminSidebarBookingBadge" aria-live="polite" aria-label="Số yêu cầu đặt lịch chờ xác nhận">0</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link sidebar-chat-link {% if request.resolver_match.url_name == 'admin_live_chat' %}active{% endif %}" href="{% url 'chat:admin_live_chat' %}">
+                <i class="fas fa-comments"></i>
+                <span class="sidebar-link-label">Chat trực tuyến</span>
+                <span class="sidebar-chat-badge d-none" id="adminSidebarChatBadge" aria-live="polite" aria-label="Số tin nhắn chat chưa đọc">0</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_complaints' %}active{% endif %}" href="{% url 'complaints:admin_complaints' %}">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="sidebar-link-label">Quản lý khiếu nại</span>
+                <span class="sidebar-complaints-badge d-none" id="adminSidebarComplaintsBadge" aria-live="polite" aria-label="Số khiếu nại chưa giải quyết">0</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_customers' %}active{% endif %}" href="{% url 'customers:admin_customers' %}">
+                <i class="fas fa-users"></i>
+                Quản lý khách hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_services' %}active{% endif %}" href="{% url 'spa_services:admin_services' %}">
+                <i class="fas fa-spa"></i>
+                Quản lý dịch vụ
+            </a>
+        </li>
+        {% if request.user.is_superuser %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_staff' %}active{% endif %}" href="{% url 'staff:admin_staff' %}">
+                <i class="fas fa-user-tie"></i>
+                Quản lý nhân viên
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'admin_profile' %}active{% endif %}" href="{% url 'admin_panel:admin_profile' %}">
+                <i class="fas fa-user-cog"></i>
+                Tài khoản cá nhân
+            </a>
+        </li>
+    </ul>
+
+    <!-- ========================================
+    AVATAR USER - Hiển thị ai đang đăng nhập
+    ======================================== -->
+    <div class="sidebar-user-info">
+        <div class="user-avatar-section">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-name">
+                {% if request.user.customerprofile.full_name %}
+                    {{ request.user.customerprofile.full_name }}
+                {% else %}
+                    {{ request.user.username }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="{% url 'admin_panel:admin_logout' %}" class="btn btn-logout logout-link">
+            <i class="fas fa-sign-out-alt"></i>
+            Đăng xuất
+        </a>
+    </div>
+</nav>
